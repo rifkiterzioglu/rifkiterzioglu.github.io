@@ -1,0 +1,18 @@
+RIFKI TERZİOĞLU — AKADEMİK WEB SİTESİ
+=====================================
+Klasör yapısı:
+  index.html              → Sitenin tamamı (Hakkımda, Yayınlar, Projeler, Dersler)
+  foto.jpg                → Profil fotoğrafı (aynı adla değiştirerek güncelleyebilirsiniz)
+  projeler/               → Etkileşimli modeller (her biri bağımsız bir HTML dosyası)
+
+Bilgisayarda görmek için: index.html dosyasına çift tıklayın.
+
+İÇERİK GÜNCELLEME (index.html'i Not Defteri veya VS Code ile açın):
+  "SİTE İÇERİĞİ" başlıklı bölümdeki listeler sitenin tüm içeriğidir.
+  • Yeni yayın  → PUBS listesine mevcut bir satırı kopyalayıp düzenleyin.
+  • Yeni proje  → PROJECTS listesine aynı şekilde ekleyin.
+  • Yeni HTML modeli → dosyayı "projeler" klasörüne koyun, DEMOS listesine bir kayıt ekleyin.
+  • Ders        → COURSES listesi.
+  Her metnin "tr:" ve "en:" olmak üzere iki dil karşılığı vardır.
+
+YAYINA ALMA: GitHub Pages veya alan adı adımlarında birlikte ilerleyeceğiz.
