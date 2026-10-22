@@ -6,6 +6,8 @@
 <title>Rıfkı Terzioğlu</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Doç. Dr. Rıfkı Terzioğlu — Bolu Abant İzzet Baysal Üniversitesi, Elektrik-Elektronik Mühendisliği">
+<meta name="google-site-verification" content="z8Ds4BhUE2255TBq0QdicD2tKZ0CjXQszBH824x2wys" />
+<link rel="canonical" href="https://rifkiterzioglu.github.io/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -148,7 +150,7 @@ section.block>h3{font-size:var(--s2);padding-bottom:8px;border-bottom:1px solid 
 }
 
 /* ---------- projects (styles) ---------- */
-.demos{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.demos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
 .demo{background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .demo canvas{display:block;width:100%;height:150px;background:#0b1220}
 .demo .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
@@ -614,7 +616,11 @@ const DEMOS = [
   {file:"cgem-dedektor.html", stages:3,
    tr:["Silindirik üçlü-GEM dedektör","Aynı zincirin üç kademeli GEM yapısıyla modeli: sürüklenme ve transfer aralıkları, kademeli kazanç, yüksek gerilim bölücüsü ve patlatılmış montaj görünümü."],
    en:["Cylindrical triple-GEM detector","The same chain with a three-stage GEM stack: drift and transfer gaps, staged gain, the high-voltage divider and an exploded assembly view."],
-   spec:"Ar/CO₂ 70/30 · 3 GEM · G ≈ 10⁴ · L = 300 mm"}
+   spec:"Ar/CO₂ 70/30 · 3 GEM · G ≈ 10⁴ · L = 300 mm"},
+  {file:"doz-kalibratoru.html", stages:1, label:"dose calibrator", hidden:true, /* patent başvurusundan sonra hidden:true kısmını silin */
+   tr:["GEM tabanlı doz kalibratörü","Kuyu tipi doz kalibratörünün üç boyutlu modeli: otomatik numune tutucu, silindirik tek-GEM dedektör, pikoamperden MBq'e okuma zinciri, dokunmatik ekran ve dahili ⁶⁰Co kaynağı ile otomatik kalibrasyon."],
+   en:["GEM-based dose calibrator","A 3D model of a well-type dose calibrator: automatic sample holder, cylindrical single-GEM detector, the readout chain from picoamperes to MBq, touch screen and automatic calibration with a built-in ⁶⁰Co source."],
+   spec:"Ar/CO₂ 70/30 · 1.5 bar · 1 GEM · Tc-99m, F-18"}
 ];
 
 const COURSES = [
@@ -772,8 +778,8 @@ document.addEventListener("keydown", e => { if ((e.key==="Enter"||e.key===" ") &
 
 /* ---------- demos ---------- */
 function renderDemos(){
-  $("#demos").innerHTML = DEMOS.map((d,i)=>`<div class="demo">
-    <canvas data-stages="${d.stages}" aria-hidden="true"></canvas>
+  $("#demos").innerHTML = DEMOS.map((d,i)=>d.hidden?"":`<div class="demo">
+    <canvas data-stages="${d.stages}" data-label="${d.label||""}" aria-hidden="true"></canvas>
     <div class="body"><h4>${esc(d[lang][0])}</h4><p>${esc(d[lang][1])}</p><div class="spec">${esc(d.spec)}</div>
     <div class="actions"><button type="button" class="btn" data-demo="${i}">${L("open_demo")} →</button>
     <a class="btn ghost" href="${d.file}" target="_blank" rel="noopener">${L("demo_tab")} ↗</a></div></div></div>`).join("")
@@ -804,7 +810,7 @@ function drawStack(cv){
     }
     spread += 10;
   }
-  g.fillStyle="#93a3bb"; g.font="10px IBM Plex Mono, monospace"; g.fillText(n===1?"single-GEM":"triple-GEM", 18, 15);
+  g.fillStyle="#93a3bb"; g.font="10px IBM Plex Mono, monospace"; g.fillText(cv.dataset.label || (n===1?"single-GEM":"triple-GEM"), 18, 15);
 }
 
 /* ---------- projects ---------- */
