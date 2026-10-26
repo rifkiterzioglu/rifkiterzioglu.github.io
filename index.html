@@ -534,7 +534,7 @@ const T = {
     fall:"Güz", spring:"Bahar", elective:"Seçmeli (4. sınıf)", turkish:"Türkçe",
     notes_h:"Ders notları ve duyurular",
     notes_text:"Ders notları, ödevler ve dönem duyuruları bu bölümde yayımlanacaktır.",
-    footer_upd:"Son güncelleme: Ekim 2026",
+    footer_upd:"Son güncelleme: 27 Ekim 2026",
     rtl_eyebrow:"Araştırma grubu · RTL",
     rtl_lede:"RTL, radyasyon dedektörlerinin okuma elektroniği üzerine çalışan bir araştırma grubudur. Dedektörden gelen küçük yük ve akım sinyallerini yükselten, sayısallaştıran ve anlamlı ölçümlere dönüştüren devreleri ve yazılımları tasarlıyor, üretiyor ve test ediyoruz.",
     rtl_focus_h:"Çalışma alanları", rtl_team_h:"Ekip", team_empty:"Ekip üyeleri yakında eklenecek.",
@@ -564,7 +564,7 @@ const T = {
     lg_art:"Makale", lg_conf:"Bildiri", cites_n:"atıf", total_c:"atıf", hidx:"h-indeksi", i10:"i10-indeksi",
     q_none:"SJR dışı", q_none_long:"SJR'de taranmayan dergi", n_art:"makale",
     src_scholar:"Kaynak: Google Akademik (22 Ekim 2026). 2026 yılı devam ediyor.",
-    src_sjr:"SCImago Journal Rank: derginin yayın yılındaki en iyi çeyreği, 26 uluslararası makale. Çubuğa tıklayarak listeyi süzebilirsiniz.",
+    src_sjr:"SCImago Journal Rank: derginin yayın yılındaki en iyi çeyreği (2026 için son yayımlanan yıl), 27 uluslararası makale. Çubuğa tıklayarak listeyi süzebilirsiniz.",
     metrics_h:"Bilimsel göstergeler", src_sjr_h:"SCImago Journal Rank: derginin yayın yılındaki en iyi çeyreği. Bir çubuğa tıklayınca o çeyrekteki makaleler listelenir.",
     showing_q:"Gösterilen: {q} dergilerindeki makaleler", clear:"Filtreyi kaldır"
   },
@@ -594,7 +594,7 @@ const T = {
     fall:"Fall", spring:"Spring", elective:"Elective (4th year)", turkish:"Turkish",
     notes_h:"Lecture notes and announcements",
     notes_text:"Lecture notes, assignments and course announcements will be posted here.",
-    footer_upd:"Last updated: October 2026",
+    footer_upd:"Last updated: 27 October 2026",
     rtl_eyebrow:"Research group · RTL",
     rtl_lede:"RTL is a research group working on readout electronics for radiation detectors. We design, build and test the circuits and software that amplify the small charge and current signals from a detector, digitise them and turn them into meaningful measurements.",
     rtl_focus_h:"Research areas", rtl_team_h:"Team", team_empty:"Team members will be listed here soon.",
@@ -624,7 +624,7 @@ const T = {
     lg_art:"Article", lg_conf:"Conference paper", cites_n:"citations", total_c:"citations", hidx:"h-index", i10:"i10-index",
     q_none:"Not in SJR", q_none_long:"Journal not indexed in SJR", n_art:"articles",
     src_scholar:"Source: Google Scholar (22 October 2026). 2026 is in progress.",
-    src_sjr:"SCImago Journal Rank: the journal's best quartile in the publication year, 26 international articles. Click a bar to filter the list.",
+    src_sjr:"SCImago Journal Rank: the journal's best quartile in the publication year (latest available year for 2026), 27 international articles. Click a bar to filter the list.",
     metrics_h:"Research metrics", src_sjr_h:"SCImago Journal Rank: the journal's best quartile in the publication year. Click a bar to list the articles in that quartile.",
     showing_q:"Showing: articles in {q} journals", clear:"Clear filter"
   }
@@ -686,6 +686,7 @@ const AWARDS = [
 
 /* Yayın türleri: intl = uluslararası makale, iconf = uluslararası bildiri, nat = ulusal makale, nconf = ulusal bildiri */
 const PUBS = [
+  {type:"intl",y:2026,a:"Terzioğlu R., Varilci A., Öztürk Ö., Terzioğlu C.",t:"Processing–structure–mechanical property relationships in Au-added YBa2Cu3O7−x superconductors investigated by dynamic microindentation",v:"Journal of Materials Science: Materials in Electronics",d:"37, 2320",doi:"10.1007/s10854-026-18639-1",q:"Q2",c:0},
   {type:"intl",y:2025,a:"Nziengui D., Kaya Ş., Terzioğlu R., Terzioğlu C.",t:"Characterization of Sc2O3/SiO2/SiC MOS capacitors: role of annealing temperature on microstructural and electrical properties",v:"Journal of Materials Science: Materials in Electronics",d:"36",doi:"10.1007/s10854-025-15837-1",q:"Q2",c:1},
   {type:"intl",y:2025,a:"Kalkan Y., Soylu Koç N., Terzioğlu R., Terzioğlu C.",t:"Gd-substituted La double perovskite manganite ceramics: novel radiation shielding material for low-energy X-ray photons",v:"Journal of Materials Science: Materials in Electronics",d:"36",doi:"10.1007/s10854-025-15635-9",q:"Q2",c:4},
   {type:"intl",y:2025,a:"Terzioğlu R., Kalkan Y., Varilci A., Öztürk Ö., Terzioğlu C.",t:"Magnetic properties of Au-doped YBCO superconductors studied by low field AC susceptibility",v:"Journal of Materials Science: Materials in Electronics",d:"36",doi:"10.1007/s10854-025-15561-w",q:"Q2",c:0},
@@ -896,7 +897,7 @@ const COURSES = [
 /* ===================================================================== */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const sub = s => esc(s).replace(/([A-Za-z\)])(\d{1,2}(?:\.\d+)?)(?=[A-Za-z\(\/\s,]|$)/g, (m,a,b)=> a + "<sub>" + b + "</sub>");
+const sub = s => esc(s).replace(/([A-Za-z\)])(\d{1,2}(?:\.\d+)?)(?=[A-Za-z\(\/\s,−]|$)/g, (m,a,b)=> a + "<sub>" + b + "</sub>").replace(/<\/sub>−([a-z])/g, "−$1</sub>");
 let lang = "tr";
 try { const s = localStorage.getItem("rt-lang"); if (s === "en" || s === "tr") lang = s; } catch(e) {}
 const L = k => T[lang][k];
