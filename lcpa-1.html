@@ -1,0 +1,1224 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LCPA-1 Sinyal Yolu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Düzen: solda tam yükseklik 3B laboratuvar tezgâhı, sağda osiloskop + açıklama + cihaz ekranı; altta sinyal zinciri şeridi.
+   Tek koyu görünüm bilinçli seçim: osiloskop/laboratuvar karanlığı. */
+:root{
+  color-scheme:dark;
+  --bg:#0a0f15;
+  --panel:#101820;
+  --panel-2:#0c131a;
+  --line:#22313d;
+  --fg:#dce5eb;
+  --muted:#8497a6;
+  --copper:#e3a35e;
+  --sig:#7fd4ff;
+  --hot:#ff7a5c;
+  --ok:#7fe0aa;
+  --scope-bg:#061017;
+  --f-display:'Chakra Petch','Bahnschrift','Segoe UI',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+*{box-sizing:border-box}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+
+.app{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 410px;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  gap:12px;
+  height:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:12px;
+}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.02em;margin:0;line-height:1.1;text-wrap:balance}
+.brand h1 span{color:var(--copper)}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:70ch}
+.modes{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel-2)}
+.modes button{background:none;border:0;padding:9px 16px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:0}
+.modes button b{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.02em}
+.modes button small{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.modes button[aria-pressed="true"]{background:color-mix(in oklab,var(--copper) 18%,transparent);box-shadow:inset 0 -2px 0 var(--copper)}
+.modes button+button{border-left:1px solid var(--line)}
+
+.viz{position:relative;min-height:380px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);touch-action:none;cursor:grab}
+.viz:active{cursor:grabbing}
+.viz canvas{display:block;width:100%;height:100%}
+#labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;white-space:nowrap;
+  font-family:var(--f-mono);font-size:11px;line-height:1.25;padding:3px 7px 3px 4px;border-radius:4px;
+  background:color-mix(in oklab,var(--panel) 86%,transparent);border:1px solid var(--line);color:var(--muted);display:flex;gap:6px;align-items:center}
+.lbl b{display:inline-grid;place-items:center;min-width:17px;height:17px;border-radius:3px;background:var(--line);color:var(--fg);font-weight:600;font-size:10px}
+.lbl.on{color:var(--fg);border-color:var(--copper);background:color-mix(in oklab,var(--copper) 22%,var(--panel))}
+.lbl.on b{background:var(--copper);color:#1a0f04}
+.lbl.deco{cursor:default;opacity:.75;font-size:10px}
+.lbl.deco b{display:none}
+.lbl::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:10px;background:var(--line)}
+.lbl.on::after{background:var(--copper)}
+.compact .lbl span{display:none}
+.compact .lbl.on span{display:inline}
+.compact .lbl.deco{display:none}
+
+.vizbar{position:absolute;top:10px;right:calc(10px + env(safe-area-inset-right,0px));display:flex;gap:6px}
+.vizbar button,.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;font-family:var(--f-mono);font-size:12px}
+.vizbar button:hover,.btn:hover{border-color:var(--muted)}
+.hint{position:absolute;left:12px;bottom:10px;font-family:var(--f-mono);font-size:11px;color:var(--muted);pointer-events:none}
+.livepill{position:absolute;left:12px;top:10px;font-family:var(--f-mono);font-size:11px;color:var(--fg);background:color-mix(in oklab,var(--panel) 85%,transparent);border:1px solid var(--line);border-radius:999px;padding:3px 10px;display:flex;gap:7px;align-items:center;pointer-events:none}
+.livepill i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+
+.chain{grid-column:1;display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.chain button{flex:0 0 auto;display:flex;align-items:center;gap:7px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:6px 10px 6px 6px;cursor:pointer;font-size:12.5px;color:var(--muted)}
+.chain button b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:4px;background:var(--line);color:var(--fg);font-family:var(--f-mono);font-size:11px}
+.chain button[aria-current="step"]{color:var(--fg);border-color:var(--copper)}
+.chain button[aria-current="step"] b{background:var(--copper);color:#1a0f04}
+.chain .arrow{flex:0 0 auto;align-self:center;color:var(--line);font-size:12px}
+
+.side{grid-column:2;grid-row:2/4;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;padding-right:2px;scrollbar-width:thin}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.card h2{margin:0 0 8px;font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.card h2 em{font-style:normal;color:var(--sig);letter-spacing:.02em;text-transform:none;font-family:var(--f-mono);font-size:11px}
+#scope{width:100%;aspect-ratio:16/10.5;border-radius:6px;display:block;max-width:100%}
+.stage-title{font-family:var(--f-display);font-size:19px;font-weight:600;margin:0 0 4px;line-height:1.2;text-wrap:balance}
+.stage-title small{color:var(--copper);font-family:var(--f-mono);font-size:12px;margin-right:6px;font-weight:400}
+.stage-text{margin:0 0 10px;color:color-mix(in oklab,var(--fg) 86%,var(--muted))}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:0;font-size:12.5px}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--fg);min-width:0;overflow-wrap:anywhere}
+#tft{width:100%;aspect-ratio:3/2;display:block;border-radius:4px;border:6px solid #1a2028;max-width:100%;background:#000}
+.ctl{display:grid;gap:10px}
+.ctl label,.ctl .lab{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+.ctl .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:var(--panel-2);border:0;padding:5px 9px;cursor:pointer;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:color-mix(in oklab,var(--sig) 22%,var(--panel-2));color:var(--fg)}
+select{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+input[type=range]{width:100%;accent-color:var(--copper)}
+.val{font-family:var(--f-mono);font-size:12px;color:var(--fg)}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--fg)}
+.check input{accent-color:var(--copper)}
+.note{font-size:11.5px;color:var(--muted);margin:0}
+
+@media (max-width:960px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;height:auto}
+  .viz{height:min(72vh,max(340px,78vw))}
+  .side{grid-column:1;grid-row:auto;overflow:visible}
+  .chain{grid-column:1}
+}
+@media (prefers-reduced-motion:reduce){.livepill i{box-shadow:none}}
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>LCPA-1 <span>Sinyal Yolu</span></h1>
+      <p>İki cihazda sinyalin bileşenden bileşene nasıl değiştiği. Değerler tasarımdan ve SPICE sonuçlarından alındı; olaylar canlı benzetimdir.</p>
+    </div>
+    <div class="modes" role="group" aria-label="Cihaz seçimi">
+      <button id="mD" aria-pressed="true"><b>Darbe ölçer</b><small>LCPA-1D · gazlı dedektör</small></button>
+      <button id="mP" aria-pressed="false"><b>Pikoampermetre</b><small>LCPA-1P · DC akım</small></button>
+    </div>
+  </header>
+
+  <div class="viz" id="viz">
+    <div id="labels"></div>
+    <div class="livepill"><i></i><span id="livetxt">canlı benzetim</span></div>
+    <div class="vizbar">
+      <button id="bPrev" aria-label="Önceki blok">‹</button>
+      <button id="bPlay" aria-label="Oynat veya duraklat">Duraklat</button>
+      <button id="bNext" aria-label="Sonraki blok">›</button>
+    </div>
+    <div class="hint">sürükle: döndür · tekerlek / iki parmak: yakınlaş · etikete tıkla: bloğa git</div>
+  </div>
+
+  <nav class="chain" id="chain" aria-label="Sinyal zinciri"></nav>
+
+  <aside class="side">
+    <section class="card">
+      <h2>Osiloskop <em id="scopeTag">CH1</em></h2>
+      <canvas id="scope"></canvas>
+    </section>
+    <section class="card" aria-live="polite">
+      <h3 class="stage-title" id="stTitle"></h3>
+      <p class="stage-text" id="stText"></p>
+      <dl class="kv" id="stKV"></dl>
+    </section>
+    <section class="card">
+      <h2>Cihaz ekranı <em>TFT · 480×320</em></h2>
+      <canvas id="tft" width="480" height="320"></canvas>
+    </section>
+    <section class="card">
+      <h2>Ayarlar</h2>
+      <div class="ctl" id="ctlD">
+        <div><label for="srcD">Kaynak / dedektör</label>
+          <select id="srcD">
+            <option value="fe55">Fe-55 X-ışını + üçlü GEM</option>
+            <option value="mwpc">Fe-55 X-ışını + MWPC</option>
+            <option value="alfa">5 MeV α + iyon odası</option>
+            <option value="test">Test darbesi (DAC ÷10 → 1 pF)</option>
+          </select></div>
+        <div id="testRow" hidden><label for="testQ">Test yükü <span class="val" id="testQv"></span></label><input type="range" id="testQ" min="5" max="1000" step="5" value="100"></div>
+        <div><span class="lab">Şekillendirme süresi τ (analog çoklayıcı)</span><div class="seg" id="segTau"></div></div>
+        <div><span class="lab">PGA kazancı</span><div class="seg" id="segPga"></div></div>
+        <div><span class="lab">CSA geri besleme (K402)</span><div class="seg" id="segCf"></div></div>
+        <div><label for="thr">Komparatör eşiği (DAC) <span class="val" id="thrv"></span></label><input type="range" id="thr" min="2" max="1500" step="1" value="20"></div>
+        <div><label for="rate">Olay hızı <span class="val" id="ratev"></span></label><input type="range" id="rate" min="20" max="3000" step="10" value="400"></div>
+        <label class="check"><input type="checkbox" id="pz" checked> Kutup-sıfır düzeltmesi açık</label>
+        <div class="row"><button class="btn" id="bNew">Yeni darbe</button><button class="btn" id="bClr">Spektrumu sil</button></div>
+      </div>
+      <div class="ctl" id="ctlP" hidden>
+        <div><label for="srcP">Örnek ölçüm</label>
+          <select id="srcP">
+            <option value="pd_dark">Fotodiyot, karanlık akım</option>
+            <option value="pd_dim">Fotodiyot, loş ışık</option>
+            <option value="pd_light">Fotodiyot, oda ışığı</option>
+            <option value="ic_bg">İyon odası, doğal fon</option>
+            <option value="ic_src">İyon odası, Cs-137 kaynağı yakın</option>
+            <option value="custom">Serbest akım</option>
+          </select></div>
+        <div><label for="iexp">Akım <span class="val" id="iv"></span></label><input type="range" id="iexp" min="-13.5" max="-2.75" step="0.01" value="-11.5"></div>
+        <div><span class="lab">Kademe</span><div class="seg" id="segRng"></div></div>
+        <div><span class="lab">Kayan ortalama (MCU)</span><div class="seg" id="segN"></div></div>
+        <p class="note">Akımı sürükleyerek değiştir: TIA çıkışı tam ölçeğin %95'ini aşınca röle bir üst kademeye, %0,75'in altına inince bir alta geçer.</p>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=getComputedStyle(document.documentElement);
+const C={sig:css.getPropertyValue('--sig').trim()||'#7fd4ff',copper:css.getPropertyValue('--copper').trim()||'#e3a35e',
+  hot:css.getPropertyValue('--hot').trim()||'#ff7a5c',ok:css.getPropertyValue('--ok').trim()||'#7fe0aa',
+  muted:css.getPropertyValue('--muted').trim()||'#8497a6',line:css.getPropertyValue('--line').trim()||'#22313d',
+  fg:css.getPropertyValue('--fg').trim()||'#dce5eb',sbg:css.getPropertyValue('--scope-bg').trim()||'#061017'};
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- sayı biçimleri (Türkçe ondalık virgül) ---------- */
+const PFX=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p'],[1e-15,'f']];
+function dec(v,d){return v.toFixed(d).replace('.',',').replace('-','−');}
+function si(v,unit,sig=3){
+  if(!isFinite(v))return '—';
+  if(v===0)return '0 '+unit;
+  const a=Math.abs(v);let p=PFX[PFX.length-1];
+  for(const q of PFX){if(a>=q[0]*0.9995){p=q;break;}}
+  const x=v/p[0];const d=Math.max(0,sig-1-Math.floor(Math.log10(Math.abs(x)+1e-30)));
+  return dec(x,Math.min(d,4))+' '+p[1]+unit;
+}
+function grp(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+/* =====================================================================
+   LCPA-1D  DARBE ÖLÇER  — tasarım değerleri
+   CSA: hızlı op-amp, Cf 1 pF ‖ Rf 100 MΩ → 1 mV/fC, τf = 100 µs (K402 ile 11 pF)
+   CR-(RC)², her RC ×2 → tepe 4·2e⁻² = 1,083 mV/fC, tepe ≈ 2τ
+   ===================================================================== */
+const KSH=4*2*Math.exp(-2);
+const SRC_D={
+  fe55:{ad:'Fe-55 + üçlü GEM',q0:180,lines:[[1,0.85,0.085],[2.9/5.9,0.15,0.12]],td:30e-9,E0:5.9,eu:'keV',
+    det:'5,9 keV X-ışını argon gazında ≈ 227 birincil elektron koparır. Üç GEM folyosu bunları ≈ 5·10³ kat çoğaltır.'},
+  mwpc:{ad:'Fe-55 + MWPC',q0:110,lines:[[1,0.85,0.10],[2.9/5.9,0.15,0.14]],td:60e-9,E0:5.9,eu:'keV',
+    det:'5,9 keV X-ışını ≈ 227 birincil elektron koparır; anot telleri çevresinde ≈ 3·10³ kat gaz kazancı oluşur.'},
+  alfa:{ad:'5 MeV α + iyon odası',q0:23.5,lines:[[1,1,0.022]],td:1.2e-6,E0:5.0,eu:'MeV',
+    det:'5 MeV α parçacığı gazda ≈ 1,47·10⁵ iyon çifti üretir (34 eV/çift). İyon odasında çoğaltma yoktur.'},
+  test:{ad:'Test darbesi',q0:100,lines:[[1,1,0.003]],td:120e-9,E0:0,eu:'',
+    det:'MCU DAC çıkışı ÷10 bölücüden geçip 1 pF enjeksiyon kapasitöründen girişe basamak verir: Q = V·1 pF.'}
+};
+const D={src:'fe55',tau:1,pga:4,cf:1,thr:20,pz:true,rate:400,testQ:100,
+  hist:new Float64Array(1024),total:0,rateEst:0,ev:null,acc:0};
+function srcD(){const s=SRC_D[D.src];if(D.src==='test')return Object.assign({},s,{q0:D.testQ});return s;}
+function sampleQ(){
+  const s=srcD();let r=Math.random(),ln=s.lines[0];
+  for(const l of s.lines){if(r<l[1]){ln=l;break;}r-=l[1];}
+  return Math.max(0.1,s.q0*ln[0]*(1+ln[2]/2.355*gauss()));
+}
+const noiseShaped=tau=>0.3e-3*Math.sqrt(0.5/tau+tau/10+0.3); // V, PGA öncesi
+function peakFromQ(Q){ // V, PGA sonrası (ADC girişi)
+  const v=(Q*1e-3/D.cf*KSH+noiseShaped(D.tau)*gauss())*D.pga;
+  return clamp(v,-3.4,3.4);
+}
+const thrV=()=>D.thr/1000;
+function chanOf(v){const code=clamp(Math.round(v/3.3*4095),0,4095);return code>>2;}
+function chExpected(){const s=srcD();return chanOf(s.q0*1e-3/D.cf*KSH*D.pga);}
+
+function makeEvent(qFix){
+  const s=srcD(),Q=qFix!=null?qFix:sampleQ(),tau=D.tau,tf=100,cf=D.cf;
+  const ev={Q,ne:Q*1e-15/1.602e-19,src:s};
+  // 1) dedektör akımı
+  {const N=320,td=s.td,T=td*3.2,xs=new Float64Array(N),ys=new Float64Array(N);
+   const sg=(t,t0,w)=>1/(1+Math.exp(-(t-t0)/w));
+   for(let i=0;i<N;i++){const t=i/(N-1)*T;xs[i]=t;ys[i]=(Q*1e-15/td)*(sg(t,td*0.55,td*0.07)-sg(t,td*1.55,td*0.1));}
+   ev.det={xs,ys,T};ev.ipk=Q*1e-15/td;}
+  // 2) CSA çıkışı (uzun pencere)
+  {const N=500,T=400e-6,xs=new Float64Array(N),ys=new Float64Array(N),A=-Q*1e-3/cf;
+   for(let i=0;i<N;i++){const t=i/(N-1)*T;xs[i]=t;ys[i]=A*Math.exp(-t/(tf*1e-6))*(1-Math.exp(-t/25e-9))+0.00012*gauss();}
+   ev.csa={xs,ys,T,A};}
+  // 3..8) şekillendirilmiş zincir, sayısal birinci derece süzgeçler
+  {const N=700,Tus=12*tau,dt=Tus/(N-1),A=-Q*1e-3/cf;
+   const xs=new Float64Array(N),cr=new Float64Array(N),sh=new Float64Array(N),pol=new Float64Array(N),
+         pg=new Float64Array(N),cmp=new Uint8Array(N),ph=new Float64Array(N);
+   const a=tau/(tau+dt),b=dt/(tau+dt);
+   let xp=0,y=0,z1=0,z2=0,n1=0,n2=0;const nz=new Float64Array(N);
+   for(let i=0;i<N;i++){const w=gauss();n1+=b*4*(w-n1);n2+=b*4*(n1-n2);nz[i]=n2;}
+   let ss=0;for(let i=0;i<N;i++)ss+=nz[i]*nz[i];const ns=noiseShaped(tau)/Math.sqrt(ss/N||1);
+   let cross=-1,pk=0;
+   for(let i=0;i<N;i++){
+     const t=i*dt;xs[i]=t*1e-6;
+     const x=D.pz?A:A*Math.exp(-t/tf);
+     y=a*(y+x-xp);xp=x;cr[i]=y;
+     z1+=b*(2*y-z1);z2+=b*(2*z1-z2);
+     const noise=nz[i]*ns;
+     sh[i]=z2-noise;pol[i]=-sh[i];
+     pg[i]=clamp(pol[i]*D.pga,-3.4,3.4);
+     cmp[i]=pg[i]>thrV()?1:0;if(cmp[i]&&cross<0)cross=i;
+   }
+   const iReset=Math.round(N*8/12);
+   let hold=0;for(let i=0;i<N;i++){
+     if(i<iReset){hold=Math.max(hold*(1-2e-5),pg[i]);ph[i]=Math.max(0,hold);}
+     else{hold*=Math.exp(-dt/(0.25*tau));ph[i]=hold;}
+   }
+   for(let i=0;i<N;i++)pk=Math.max(pk,pg[i]);
+   const iS=Math.round(N*5/12);
+   ev.sh={xs,cr,sh,pol,pg,cmp,ph,T:Tus*1e-6,cross,iS,iReset,pk,
+     crMin:Math.min.apply(null,Array.from(cr)),crMax:Math.max.apply(null,Array.from(cr))};
+   ev.counted=cross>=0;
+   ev.vS=ph[iS];ev.code=clamp(Math.round(ev.vS/3.3*4095),0,4095);ev.ch=ev.code>>2;
+  }
+  return ev;
+}
+function accumulate(dt){
+  if(!isFinite(dt)||dt<=0)return;
+  D.acc+=D.rate*dt;let n=Math.floor(D.acc);D.acc-=n;n=Math.min(n,400);
+  let c=0;
+  for(let k=0;k<n;k++){const v=peakFromQ(sampleQ());if(v>thrV()){D.hist[chanOf(v)]++;c++;}}
+  D.total+=c;
+  const inst=c/dt;D.rateEst+= (inst-D.rateEst)*Math.min(1,dt*1.5);
+}
+function histStats(){
+  const h=D.hist,c0=Math.min(1023,chanOf(thrV())+1);let m=c0,mx=0;
+  for(let i=c0;i<1024;i++)if(h[i]>mx){mx=h[i];m=i;}
+  if(mx<5)return{peak:null};
+  // 5 kanallık kayan toplamla tepe ve yarı yükseklik
+  const sm=i=>{let s=0;for(let k=-2;k<=2;k++)s+=h[clamp(i+k,0,1023)];return s/5;};
+  let mm=m,best=0;for(let i=Math.max(c0,m-6);i<=Math.min(1023,m+6);i++){const s=sm(i);if(s>best){best=s;mm=i;}}
+  const half=best/2;let l=mm,r=mm;while(l>c0&&sm(l)>half)l--;while(r<1023&&sm(r)>half)r++;
+  return{peak:mm,fwhm:(r-l)/mm*100};
+}
+
+/* =====================================================================
+   LCPA-1P  PİKOAMPERMETRE — tasarım değerleri
+   Elektrometre op-amp TIA, 10 GΩ‖1 pF hep bağlı; röleler 100 MΩ / 1 MΩ / 10 kΩ / 1 kΩ ekler
+   Tam ölçek ±2 V. ΔΣ ADC 32 bit, 20 SPS sinc4, Vref 2,5 V
+   ===================================================================== */
+const RNG=[
+  {Rf:1e10,Cf:1e-12,fs:2e-10,lbl:'200 pA',rf:'10 GΩ',cf:'1 pF',k:'—',bw:'16,8 Hz',iN:3e-15},
+  {Rf:1e8,Cf:11e-12,fs:2e-8,lbl:'20 nA',rf:'100 MΩ',cf:'10 pF',k:'K101',bw:'150 Hz',iN:2.7e-14},
+  {Rf:1e6,Cf:101e-12,fs:2e-6,lbl:'2 µA',rf:'1 MΩ',cf:'100 pF',k:'K102',bw:'1,6 kHz',iN:2.7e-13},
+  {Rf:1e4,Cf:1.001e-9,fs:2e-4,lbl:'200 µA',rf:'10 kΩ',cf:'1 nF',k:'K103',bw:'16,8 kHz',iN:2.7e-12},
+  {Rf:1e3,Cf:10.001e-9,fs:2e-3,lbl:'2 mA',rf:'1 kΩ',cf:'10 nF',k:'K104',bw:'16,8 kHz',iN:8.5e-12}
+];
+const PRE_P={
+  pd_dark:{I:3.2e-12,kind:'pd',lv:0,ad:'Fotodiyot karanlık akımı (ters öngerilim)'},
+  pd_dim:{I:4.6e-9,kind:'pd',lv:.35,ad:'Fotodiyot, loş ışık'},
+  pd_light:{I:1.85e-6,kind:'pd',lv:.8,ad:'Fotodiyot, oda ışığı'},
+  ic_bg:{I:4.5e-14,kind:'ic',lv:.15,ad:'İyon odası, doğal fon radyasyonu'},
+  ic_src:{I:1.2e-11,kind:'ic',lv:.7,ad:'İyon odası, Cs-137 yakınında'},
+  custom:{I:null,kind:'pd',lv:.5,ad:'Serbest akım'}
+};
+const P={pre:'pd_dark',I:3.2e-12,kind:'pd',auto:true,r:0,N:16,V:0,Vrc:0,t:0,acc:0,lastS:0,blank:0,
+  avg:[],Iavg:NaN,Iraw:NaN,code:0,Vs:0,over:false,trace:[],samples:[],events:[],tTrace:0};
+const VB=0.0;
+function tauR(r){const R=RNG[r];const Rf=r===0?1e10:1/(1/R.Rf+1/1e10);return Rf*(R.Cf+(r===0?0:1e-12));}
+function adcNoiseI(r){const a=RNG[r].iN,b=0.3e-6/RNG[r].Rf;return Math.sqrt(a*a+b*b);}
+function simP(dt){
+  dt=Math.min(dt,0.1);
+  const step=0.001;P.acc+=dt;
+  while(P.acc>=step){
+    P.acc-=step;P.t+=step;
+    const r=P.r,R=RNG[r];
+    const In=P.I*(1+(P.kind==='ic'?0.03*gauss()*Math.sqrt(1e-12/Math.max(P.I,1e-15))*0.2:0));
+    const target=clamp(-In*R.Rf,-4.6,4.6);
+    const k=Math.min(1,step/tauR(r));
+    P.V+= (target-P.V)*k;
+    P.Vrc=P.V; // 16 kHz süzgeç 1 ms adımda şeffaf
+    if(P.t-P.tTrace>=0.005){
+      P.tTrace=P.t;
+      const vn=R.Rf*adcNoiseI(r)*2.2*gauss();
+      P.trace.push({t:P.t,I:In,V:P.V+vn,r});
+      while(P.trace.length&&P.trace[0].t<P.t-5.2)P.trace.shift();
+    }
+    if(P.t-P.lastS>=0.05){ // ADC 20 SPS
+      P.lastS=P.t;
+      const Vs=clamp(P.Vrc+R.Rf*adcNoiseI(r)*gauss(),-2.5,2.5);
+      P.Vs=Vs;P.code=clamp(Math.round(Vs/2.5*2147483648),-2147483648,2147483647);
+      P.over=Math.abs(Vs)>=2.45;
+      let valid=false;
+      if(P.blank>0){P.blank--;}
+      else{
+        valid=true;
+        P.Iraw=-Vs/R.Rf;P.avg.push(P.Iraw);while(P.avg.length>P.N)P.avg.shift();
+        P.Iavg=P.avg.reduce((a,b)=>a+b,0)/P.avg.length;
+        if(P.auto){
+          let nr=r;
+          if(Math.abs(Vs)>1.9&&r<4)nr=r+1;
+          else if(Math.abs(Vs)<0.015&&r>0)nr=r-1;
+          if(nr!==r){P.events.push({t:P.t,from:r,to:nr});P.r=nr;P.blank=nr===0?3:2;P.avg=[];}
+        }
+      }
+      P.samples.push({t:P.t,Vs,code:P.code,Iraw:P.Iraw,Iavg:P.Iavg,r,valid});
+      while(P.samples.length&&P.samples[0].t<P.t-5.2)P.samples.shift();
+      while(P.events.length&&P.events[0].t<P.t-5.2)P.events.shift();
+    }
+  }
+}
+
+/* =====================================================================
+   3B SAHNE
+   ===================================================================== */
+const viz=$('viz'),labelsEl=$('labels');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.setClearColor(0x0a0f15,1);
+viz.insertBefore(renderer.domElement,labelsEl);
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x0a0f15,34,70);
+const camera=new THREE.PerspectiveCamera(36,1,0.1,200);
+scene.add(new THREE.HemisphereLight(0xa9cdf0,0x0c1218,0.75));
+const sun=new THREE.DirectionalLight(0xffffff,0.95);sun.position.set(6,16,9);scene.add(sun);
+const rim=new THREE.DirectionalLight(0x7fd4ff,0.35);rim.position.set(-12,6,-10);scene.add(rim);
+const warm=new THREE.PointLight(0xffb066,0.6,30);warm.position.set(-12,6,5);scene.add(warm);
+
+const std=(c,r=.5,m=.1,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:r,metalness:m},o));
+const M={
+  board:std(0x0d3a2b,.6,.12),boardEdge:std(0x0a2a20,.7,.05),
+  copper:std(0xc8874a,.32,.85),copperHot:std(0xc8874a,.3,.85,{emissive:0x5a2c08}),
+  chip:std(0x15181c,.42,.2),pin:std(0xc4ccd3,.28,.92),metal:std(0xbfc6cd,.25,.95),gold:std(0xd4a640,.3,.9),
+  relay:std(0x1f3d6c,.45,.15),cer:std(0xc49c66,.55,.05),hvcap:std(0x2b62b0,.45,.1),res:std(0x2e5e3b,.5,.08),
+  white:std(0xe6eaee,.6,.02),black:std(0x0a0c0f,.6,.1),cable:std(0x111417,.7,.05),blueBoard:std(0x123a7a,.55,.1),
+  glass:std(0x9cc9ff,.05,.1,{transparent:true,opacity:.35}),floor:std(0x0b1117,.95,0)
+};
+function box(w,h,d,mat,x=0,y=0,z=0){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);return m;}
+function cyl(r,h,mat,x=0,y=0,z=0,seg=28){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),mat);m.position.set(x,y,z);return m;}
+function topTex(text,sub,w=256,h=128){
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
+  g.fillStyle='#16191d';g.fillRect(0,0,w,h);
+  g.fillStyle='#9aa4ad';g.font='600 '+Math.round(h*0.26)+'px JetBrains Mono, monospace';g.textAlign='center';g.textBaseline='middle';
+  g.fillText(text,w/2,h*(sub?0.4:0.5));
+  if(sub){g.font=Math.round(h*0.17)+'px JetBrains Mono, monospace';g.fillStyle='#6e7880';g.fillText(sub,w/2,h*0.72);}
+  g.fillStyle='#4a5058';g.beginPath();g.arc(h*0.16,h*0.2,h*0.06,0,7);g.fill();
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;
+}
+function chip(w,d,h,name,sub,pins=4,pinsZ=0,qfp=false){
+  const g=new THREE.Group();
+  const top=new THREE.MeshStandardMaterial({map:topTex(name,sub,256,Math.round(256*d/w)),roughness:.45,metalness:.15});
+  const mats=[M.chip,M.chip,top,M.chip,M.chip,M.chip];
+  const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats);b.position.y=h/2+0.06;g.add(b);
+  const pw=Math.min(0.07,w/(pins*2.2));
+  for(let i=0;i<pins;i++){const x=-w/2+(i+0.5)*w/pins;
+    g.add(box(pw,0.04,0.2,M.pin,x,0.08,d/2+0.08));g.add(box(pw,0.04,0.2,M.pin,x,0.08,-d/2-0.08));}
+  for(let i=0;i<pinsZ;i++){const z=-d/2+(i+0.5)*d/pinsZ;
+    g.add(box(0.2,0.04,Math.min(0.07,d/(pinsZ*2.2)),M.pin,w/2+0.08,0.08,z));g.add(box(0.2,0.04,Math.min(0.07,d/(pinsZ*2.2)),M.pin,-w/2-0.08,0.08,z));}
+  return g;
+}
+function smd(x,z,rot=0,mat=M.cer,l=0.32,w=0.17){
+  const g=new THREE.Group();g.add(box(l*0.7,0.12,w,mat,0,0.12,0));
+  g.add(box(l*0.16,0.13,w,M.pin,-l*0.42,0.125,0));g.add(box(l*0.16,0.13,w,M.pin,l*0.42,0.125,0));
+  g.position.set(x,0,z);g.rotation.y=rot;return g;
+}
+function relay(x,z,name){
+  const g=new THREE.Group();
+  const top=new THREE.MeshStandardMaterial({map:topTex(name,'Röle',128,512),roughness:.5,metalness:.1});
+  const mats=[M.relay,M.relay,top,M.relay,M.relay,M.relay];
+  const b=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.75,1.98),mats);b.position.set(0,0.455,0);g.add(b);
+  const led=box(0.3,0.02,1.2,new THREE.MeshBasicMaterial({color:0x223344}),0,0.84,0);g.add(led);g.userData.led=led;
+  g.position.set(x,0,z);return g;
+}
+
+/* zemin + kart */
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(140,140),M.floor);floor.rotation.x=-Math.PI/2;floor.position.y=-2.2;scene.add(floor);
+const grid=new THREE.GridHelper(140,70,0x1a2834,0x111b23);grid.position.y=-2.19;scene.add(grid);
+const common=new THREE.Group();scene.add(common);
+const BX=-0.5,BW=15.6,BD=8.6;
+common.add(box(BW,0.16,BD,M.board,BX,0,0));
+// kenar ve vida delikleri
+for(const [x,z] of [[BX-BW/2+0.5,-BD/2+0.5],[BX+BW/2-0.5,-BD/2+0.5],[BX-BW/2+0.5,BD/2-0.5],[BX+BW/2-0.5,BD/2-0.5]]){
+  common.add(cyl(0.3,0.18,M.copper,x,0.01,z));common.add(cyl(0.17,0.2,M.black,x,0.02,z));}
+// kart üstü baskı yazısı
+(function(){const c=document.createElement('canvas');c.width=1024;c.height=128;const g=c.getContext('2d');
+  g.fillStyle='rgba(0,0,0,0)';g.fillRect(0,0,1024,128);g.fillStyle='#e8eef0';g.font='600 54px JetBrains Mono, monospace';
+  g.fillText('LCPA-1  Rev C',20,82);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,0.52),new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:.7}));
+  m.rotation.x=-Math.PI/2;m.position.set(4.6,0.085,3.75);common.add(m);})();
+// MCU (her iki cihazda aynı)
+const MCU_POS=[0.8,0,1.5];
+const mcu=chip(2.4,2.4,0.18,'MCU','32 bit',16,16,true);mcu.position.set(...MCU_POS);common.add(mcu);
+common.add(smd(-0.9,0.1,0));common.add(smd(-0.9,2.9,0));common.add(smd(2.4,3.0,Math.PI/2));
+// kristal
+common.add(box(0.5,0.12,0.25,M.metal,-1.0,0.12,1.5));
+// güç bölümü (süs)
+const pwr=new THREE.Group();pwr.position.set(5.9,0,3.0);
+pwr.add(box(0.9,0.5,0.9,std(0x2a2d31,.5,.3),0,0.33,0));pwr.add(chip(0.6,0.5,0.12,'TPS7A','',3));pwr.children[1].position.set(1.0,0,0);
+pwr.add(cyl(0.28,0.5,std(0x1c1f22,.4,.4),-0.9,0.33,-0.1));pwr.add(box(1.4,0.6,0.5,M.white,0.3,0.38,-1.0));
+common.add(pwr);
+// TFT modülü
+const tftCanvas=$('tft');
+const tftTex=new THREE.CanvasTexture(tftCanvas);tftTex.encoding=THREE.sRGBEncoding;tftTex.anisotropy=4;
+const tft=new THREE.Group();tft.position.set(-4.8,1.55,3.05);tft.rotation.x=-0.32;
+tft.add(box(4.5,3.2,0.14,M.blueBoard,0,0,-0.05));
+tft.add(box(4.2,2.85,0.06,M.black,0,0.0,0.04));
+const scr=new THREE.Mesh(new THREE.PlaneGeometry(3.9,2.6),new THREE.MeshBasicMaterial({map:tftTex,toneMapped:false}));
+scr.position.z=0.08;tft.add(scr);
+tft.add(box(0.2,1.6,0.2,M.black,-1.6,-1.25,-0.3));tft.add(box(0.2,1.6,0.2,M.black,1.6,-1.25,-0.3));
+common.add(tft);
+
+/* glow pad / parıltı */
+const dotTex=(function(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
+  const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.25,'rgba(255,255,255,.75)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);return t;})();
+function glowPad(w,d,color){
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({color,transparent:true,opacity:0,
+    blending:THREE.AdditiveBlending,depthWrite:false,map:padTex}));
+  m.rotation.x=-Math.PI/2;return m;
+}
+const padTex=(function(){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+  const gr=g.createRadialGradient(64,64,10,64,64,64);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(.7,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr;g.fillRect(0,0,128,128);g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=3;g.strokeRect(8,8,112,112);
+  return new THREE.CanvasTexture(c);})();
+
+/* ---------- yol (iz) yardımcıları ---------- */
+const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
+const TY=0.1;
+function buildPath(segDefs,group){
+  const segs=[];
+  segDefs.forEach(def=>{
+    let pts;
+    if(def.cable){
+      const curve=new THREE.CatmullRomCurve3(def.cable.map(p=>V3(...p)));
+      pts=curve.getPoints(60);
+      const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,120,0.11,10,false),M.cable);group.add(tube);
+    }else{
+      pts=def.map(p=>V3(p[0],TY,p[1]));
+      for(let i=0;i<pts.length-1;i++){
+        const a=pts[i],b=pts[i+1],len=a.distanceTo(b);if(len<1e-6)continue;
+        const tr=box(len+0.09,0.02,0.09,M.copper,(a.x+b.x)/2,0.085,(a.z+b.z)/2);
+        tr.rotation.y=-Math.atan2(b.z-a.z,b.x-a.x);group.add(tr);
+        group.add(cyl(0.07,0.025,M.copper,b.x,0.085,b.z,12));
+      }
+    }
+    const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+pts[i].distanceTo(pts[i-1]));
+    segs.push({pts,cum,len:cum[cum.length-1]});
+  });
+  return segs;
+}
+function posOnSeg(seg,u,out){
+  const L=u*seg.len;let i=1;while(i<seg.cum.length-1&&seg.cum[i]<L)i++;
+  const a=seg.pts[i-1],b=seg.pts[i],f=(L-seg.cum[i-1])/Math.max(1e-9,seg.cum[i]-seg.cum[i-1]);
+  return out.copy(a).lerp(b,clamp(f,0,1));
+}
+
+/* =====================================================================
+   LCPA-1D sahnesi
+   ===================================================================== */
+const gD=new THREE.Group();scene.add(gD);
+const gP=new THREE.Group();scene.add(gP);
+
+function holeTex(){
+  const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+  g.fillStyle='#c98a4a';g.fillRect(0,0,256,256);g.fillStyle='#1a1008';
+  for(let y=0;y<16;y++)for(let x=0;x<16;x++){g.beginPath();g.arc(x*16+8+(y%2)*8,y*16+8,4.2,0,7);g.fill();}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(3,3);t.encoding=THREE.sRGBEncoding;return t;
+}
+// GEM dedektörü
+const GEMX=-12.6;
+const gem=new THREE.Group();gem.position.set(GEMX,0,0);gD.add(gem);
+const gemLevels={cath:3.1,f1:2.45,f2:1.9,f3:1.35,pad:0.75};
+gem.add(box(3.8,0.06,3.8,std(0x5d6670,.4,.7),0,gemLevels.cath,0));
+const foilMat=new THREE.MeshStandardMaterial({map:holeTex(),transparent:true,opacity:.82,roughness:.35,metalness:.7,side:THREE.DoubleSide});
+for(const y of [gemLevels.f1,gemLevels.f2,gemLevels.f3]){const f=new THREE.Mesh(new THREE.PlaneGeometry(3.5,3.5),foilMat);f.rotation.x=-Math.PI/2;f.position.y=y;gem.add(f);
+  gem.add(box(3.7,0.05,0.12,std(0xd9b44a,.5,.2),0,y,1.8));gem.add(box(3.7,0.05,0.12,std(0xd9b44a,.5,.2),0,y,-1.8));}
+gem.add(box(3.8,0.1,3.8,M.board,0,gemLevels.pad,0));
+for(let i=0;i<5;i++)for(let j=0;j<5;j++)gem.add(box(0.55,0.02,0.55,M.copper,-1.4+i*0.7,gemLevels.pad+0.06,-1.4+j*0.7));
+const gasBox=box(4.0,2.8,4.0,new THREE.MeshStandardMaterial({color:0x5aa8ff,transparent:true,opacity:.07,roughness:.1,depthWrite:false}),0,1.95,0);gem.add(gasBox);
+const gemEdges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(4.0,2.8,4.0)),new THREE.LineBasicMaterial({color:0x3b6a8f}));gemEdges.position.y=1.95;gem.add(gemEdges);
+// ayaklar
+for(const [x,z] of [[-1.7,-1.7],[1.7,-1.7],[-1.7,1.7],[1.7,1.7]])gem.add(cyl(0.08,2.9,M.metal,x,-0.75,z,10));
+// pencere ve kaynak
+gem.add(cyl(0.45,0.04,new THREE.MeshStandardMaterial({color:0xffd27a,transparent:true,opacity:.5}),0,3.16,0));
+const srcCap=cyl(0.35,0.35,std(0x8b9097,.3,.8),0.9,4.4,0.4);gem.add(srcCap);
+// HV kablosu (dedektöre)
+const hvCable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(-1.9,3.0,-1.2),V3(-2.8,3.4,-2.2),V3(-3.4,0.8,-3.6),V3(-2.6,-2.0,-4.6)]),60,0.07,8),std(0x8a1d1d,.6,.05));gem.add(hvCable);
+// elektron noktaları
+const NE=500;
+const eGeo=new THREE.BufferGeometry();const ePos=new Float32Array(NE*3);eGeo.setAttribute('position',new THREE.BufferAttribute(ePos,3));
+const eMat=new THREE.PointsMaterial({size:.16,map:dotTex,color:0x7fd4ff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+const ePts=new THREE.Points(eGeo,eMat);gem.add(ePts);
+const eData=[];for(let i=0;i<NE;i++){eData.push({lvl:i<12?0:i<40?1:i<130?2:3,ox:gauss(),oz:gauss(),j:Math.random()});}
+const photon=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V3(0,0,0),V3(0,0,0)]),new THREE.LineBasicMaterial({color:0xffd27a,transparent:true,opacity:0}));gem.add(photon);
+const padGlow=glowPad(3.6,3.6,0x7fd4ff);padGlow.position.y=gemLevels.pad+0.08;gem.add(padGlow);
+const alphaTrack=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.6,8),new THREE.MeshBasicMaterial({color:0xff9a5a,transparent:true,opacity:0,blending:THREE.AdditiveBlending}));
+alphaTrack.rotation.z=Math.PI/2;alphaTrack.position.y=2.75;gem.add(alphaTrack);
+
+// D bloklarının yerleşimi
+const ZA=-2.6;
+const sD=[]; // aşamalar
+// 1 SHV + C402
+{const g=new THREE.Group();
+ const shv=new THREE.Group();shv.add(cyl(0.42,1.2,M.metal,0,0,0));shv.add(cyl(0.3,0.3,M.white,0,-0.7,0));shv.add(cyl(0.1,0.32,M.gold,0,-0.75,0,12));
+ shv.rotation.z=Math.PI/2;shv.position.set(-8.4,0.5,ZA);g.add(shv);g.add(box(0.9,0.9,1.1,M.metal,-7.85,0.5,ZA));
+ const hv=cyl(0.5,0.16,M.hvcap,-6.6,0.62,ZA);hv.rotation.x=Math.PI/2;g.add(hv);
+ g.add(cyl(0.035,0.6,M.pin,-6.75,0.3,ZA,6));g.add(cyl(0.035,0.6,M.pin,-6.45,0.3,ZA,6));
+ const sm=box(2.74,0.86,0.25,M.res,-6.6,0.53,ZA-0.95);g.add(sm); // YG direnci Rb 10 MΩ
+ g.add(smd(-5.6,ZA,0));g.add(smd(-5.6,ZA+0.5,0,M.chip,0.3,0.15));
+ gD.add(g);sD.push({g,name:'SHV giriş + kuplaj',short:'SHV · kuplaj',a:[-6.6,ZA],fp:[3.6,2.6],ly:1.5,pc:[-6.6,0.6,ZA]});}
+// 2 CSA
+{const g=new THREE.Group();const c=chip(0.9,0.75,0.16,'CSA','op-amp',4);c.position.set(-3.9,0,ZA);g.add(c);
+ g.add(smd(-3.9,ZA-0.75,0));g.add(smd(-3.4,ZA-0.75,0,M.res));g.add(box(0.55,0.4,0.9,M.relay,-3.0,0.28,ZA+0.2));
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(0.75,0.03,6,40),M.copper);ring.rotation.x=Math.PI/2;ring.position.set(-4.4,0.09,ZA);ring.scale.set(1,0.7,1);g.add(ring);
+ gD.add(g);sD.push({g,name:'Yük duyarlı yükselteç (CSA)',short:'CSA',a:[-3.9,ZA],fp:[2.2,2.2],ly:1.0});}
+// 3 PZ + CR
+{const g=new THREE.Group();g.add(smd(-1.5,ZA-0.3,0));g.add(smd(-1.5,ZA+0.3,0,M.res));g.add(smd(-0.9,ZA,Math.PI/2));
+ const b=chip(0.55,0.45,0.13,'Op-amp','',3);b.position.set(-0.8,0,ZA+0.75);g.add(b);
+ gD.add(g);sD.push({g,name:'Kutup-sıfır + CR türevi',short:'PZ · CR',a:[-1.2,ZA],fp:[2.0,2.0],ly:0.9});}
+// 4 RC-RC
+{const g=new THREE.Group();const a=chip(0.9,0.75,0.16,'Op-amp','RC×2',4);a.position.set(1.3,0,ZA);g.add(a);
+ const m=chip(0.8,0.55,0.12,'MUX','τ seç',8);m.position.set(1.7,0,ZA-1.05);g.add(m);
+ g.add(smd(2.2,ZA+0.2,0));g.add(smd(2.2,ZA-0.3,0,M.res));g.add(smd(0.6,ZA+0.6,Math.PI/2));
+ gD.add(g);sD.push({g,name:'RC-RC şekillendirici',short:'Şekillendirici',a:[1.6,ZA],fp:[2.4,2.6],ly:1.0});}
+// 5 Kutup + PGA
+{const g=new THREE.Group();const a=chip(0.8,0.55,0.12,'Anahtar','kutup',8);a.position.set(4.0,0,ZA-0.8);g.add(a);
+ const b=chip(0.9,0.75,0.16,'PGA','op-amp',4);b.position.set(4.6,0,ZA+0.2);g.add(b);g.add(smd(5.4,ZA,Math.PI/2,M.res));
+ gD.add(g);sD.push({g,name:'Kutup seçimi + PGA',short:'Kutup · PGA',a:[4.4,ZA],fp:[2.4,2.4],ly:1.0});}
+// 6 Komparatör (MCU içinde)
+sD.push({g:null,name:'Komparatör ve sayaç (MCU)',short:'Komparatör',a:[2.0,0.5],fp:[3.0,3.0],ly:0.9,pad:'mcu',lx:0.9});
+// 7 Tepe tutucu
+{const g=new THREE.Group();const a=chip(0.9,0.75,0.16,'Op-amp','tepe',4);a.position.set(5.4,0,1.6);g.add(a);
+ const d=cyl(0.09,0.42,M.black,6.15,0.15,1.15,12);d.rotation.z=Math.PI/2;g.add(d);{const bd=cyl(0.095,0.06,M.white,6.3,0.15,1.15,12);bd.rotation.z=Math.PI/2;g.add(bd);}
+ g.add(smd(6.2,1.8,Math.PI/2,M.cer,0.4,0.22));g.add(smd(4.8,2.2,0));
+ gD.add(g);sD.push({g,name:'Tepe tutucu',short:'Tepe tutucu',a:[5.4,1.6],fp:[2.2,2.0],ly:1.0});}
+// 8 ADC + MCA
+sD.push({g:null,name:'ADC → MCA (MCU)',short:'ADC · MCA',a:[2.0,2.4],fp:[3.0,3.0],ly:0.9,pad:'mcu',lx:0.9});
+// 9 TFT
+sD.push({g:null,name:'TFT ekran',short:'Ekran',a:[-2.4,2.6],fp:[5,3.6],ly:0,pad:'tft',lpos:[-4.8,3.45,2.6]});
+// 0 dedektör (başa)
+sD.unshift({g:gem,name:'Gazlı dedektör',short:'Dedektör',a:[GEMX,0],fp:[4.6,4.6],ly:0,lpos:[GEMX,5.0,0],pad:'gem'});
+const segD=buildPath([
+  {cable:[[GEMX,0.78,0],[GEMX+1.9,0.5,0.6],[GEMX+2.4,-1.2,0.2],[-9.6,-0.6,-1.8],[-9.2,0.5,ZA],[-8.9,0.5,ZA]]},
+  [[-6.6,ZA],[-3.9,ZA]],
+  [[-3.9,ZA],[-1.2,ZA]],
+  [[-1.2,ZA],[1.6,ZA]],
+  [[1.6,ZA],[4.4,ZA]],
+  [[4.4,ZA],[4.4,-0.6],[2.0,-0.6],[2.0,0.5]],
+  [[2.0,0.5],[5.4,0.5],[5.4,1.6]],
+  [[5.4,1.6],[5.4,2.4],[2.0,2.4]],
+  [[2.0,2.4],[2.0,3.6],[-2.4,3.6],[-2.4,2.6]]
+],gD);
+// kısa iz SHV konnektöründen C402'ye
+gD.add(box(1.4,0.02,0.09,M.copper,-7.6,0.085,ZA));
+segD[0].pts.push(V3(-6.6,TY,ZA));segD[0].cum.push(segD[0].len+2.3);segD[0].len+=2.3;
+
+/* =====================================================================
+   LCPA-1P sahnesi
+   ===================================================================== */
+const SRCX=-12.6;
+const pdG=new THREE.Group();pdG.position.set(SRCX,0,0);gP.add(pdG);
+pdG.add(cyl(0.12,2.2,M.metal,0,-0.9,0,10));pdG.add(box(1.6,0.12,1.6,std(0x2a2f35,.5,.4),0,0.25,0));
+pdG.add(cyl(0.6,0.55,M.metal,0,0.6,0));pdG.add(cyl(0.48,0.04,M.glass,0,0.89,0));
+pdG.add(box(0.5,0.02,0.5,std(0x274c8c,.3,.3,{emissive:0x0b1a33}),0,0.86,0));
+const lamp=new THREE.Group();lamp.position.set(0,4.2,0);pdG.add(lamp);
+lamp.add(cyl(0.5,0.4,std(0x30353b,.5,.5),0,0.2,0));
+const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.32,24,16),new THREE.MeshBasicMaterial({color:0xfff0c8}));lamp.add(bulb);
+const cone=new THREE.Mesh(new THREE.ConeGeometry(1.25,3.3,40,1,true),new THREE.MeshBasicMaterial({color:0xffe1a0,transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+cone.position.y=-1.65;lamp.add(cone);
+const icG=new THREE.Group();icG.position.set(SRCX,0,0);gP.add(icG);
+icG.add(cyl(1.3,3.2,new THREE.MeshStandardMaterial({color:0x8fb4d8,transparent:true,opacity:.18,roughness:.1,metalness:.2,depthWrite:false}),0,1.6,0,40));
+icG.add(cyl(1.32,0.12,M.metal,0,0.02,0,40));icG.add(cyl(1.32,0.12,M.metal,0,3.2,0,40));
+icG.add(cyl(0.06,3.0,M.gold,0,1.6,0,10));
+const icEdge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(1.3,1.3,3.2,20,1,true)),new THREE.LineBasicMaterial({color:0x3b6a8f,transparent:true,opacity:.5}));icEdge.position.y=1.6;icG.add(icEdge);
+const csSrc=box(0.6,0.3,0.6,std(0xd9b44a,.5,.4),2.2,1.6,1.4);icG.add(csSrc);
+const NI=260;const iGeo=new THREE.BufferGeometry();const iPos=new Float32Array(NI*3);iGeo.setAttribute('position',new THREE.BufferAttribute(iPos,3));
+const iPts=new THREE.Points(iGeo,new THREE.PointsMaterial({size:.14,map:dotTex,color:0xffb066,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));icG.add(iPts);
+const ions=[];for(let i=0;i<NI;i++)ions.push({a:Math.random()*6.283,r:Math.random()*1.25,y:0.2+Math.random()*2.8,v:0.3+Math.random()*0.5,on:Math.random()});
+
+const sP=[];
+sP.push({g:pdG,name:'Akım kaynağı',short:'Kaynak',a:[SRCX,0],fp:[3.4,3.4],ly:0,lpos:[SRCX,5.4,0],pad:'src'});
+// 1 triaks + koruma
+{const g=new THREE.Group();const tx=new THREE.Group();
+ tx.add(cyl(0.5,1.2,M.metal,0,0,0));tx.add(cyl(0.38,0.25,M.white,0,-0.68,0));tx.add(cyl(0.26,0.3,M.gold,0,-0.72,0));tx.add(cyl(0.18,0.32,M.white,0,-0.74,0));tx.add(cyl(0.06,0.35,M.gold,0,-0.76,0,10));
+ tx.rotation.z=Math.PI/2;tx.position.set(-8.4,0.56,ZA);g.add(tx);g.add(box(0.9,1.0,1.2,M.metal,-7.85,0.55,ZA));
+ const b=chip(0.45,0.35,0.1,'Diyot','',3);b.position.set(-6.4,0,ZA-0.6);g.add(b);g.add(smd(-6.6,ZA+0.1,0,M.res));
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(0.62,0.035,6,40),M.copper);ring.rotation.x=Math.PI/2;ring.position.set(-7.0,0.09,ZA);g.add(ring);
+ gP.add(g);sP.push({g,name:'Triaks giriş + koruma',short:'Triaks giriş',a:[-6.8,ZA],fp:[3.4,2.4],ly:1.4});}
+// 2 TIA
+{const g=new THREE.Group();const c=chip(0.9,0.75,0.16,'TIA','elektrometre',4);c.position.set(-4.0,0,ZA);g.add(c);
+ for(const s of [0.95,1.15]){const ring=new THREE.Mesh(new THREE.TorusGeometry(s,0.03,6,48),M.copper);ring.rotation.x=Math.PI/2;ring.position.set(-4.0,0.09,ZA);ring.scale.set(1,0.75,1);g.add(ring);}
+ const rg=new THREE.Group();rg.add(cyl(0.13,1.3,M.glass));rg.add(cyl(0.135,0.3,std(0x777f88,.4,.5)));rg.rotation.z=Math.PI/2;rg.position.set(-4.0,0.5,ZA-1.35);g.add(rg);
+ g.add(smd(-4.0,ZA+1.1,0));
+ gP.add(g);sP.push({g,name:'Transempedans yükselteç (TIA)',short:'TIA',a:[-4.0,ZA],fp:[2.8,2.8],ly:1.1});}
+// 3 röleler
+const relays=[];
+{const g=new THREE.Group();
+ ['K101','K102','K103','K104'].forEach((n,i)=>{const r=relay(-2.05+i*0.62,ZA,n);g.add(r);relays.push(r);
+   g.add(smd(-2.05+i*0.62,ZA+1.35,Math.PI/2,M.res,0.32,0.16));g.add(smd(-2.05+i*0.62,ZA-1.35,Math.PI/2,M.cer,0.32,0.16));});
+ const u=chip(1.3,0.55,0.12,'Sürücü','',9);u.position.set(-1.1,0,-0.4);g.add(u);
+ gP.add(g);sP.push({g,name:'Kademe röleleri (oto)',short:'Kademe röleleri',a:[-1.1,ZA],fp:[3.0,3.4],ly:1.5});}
+// 4 RC
+{const g=new THREE.Group();g.add(smd(1.5,ZA,0,M.res,0.4,0.2));g.add(smd(2.1,ZA,Math.PI/2,M.cer,0.4,0.2));g.add(smd(2.1,ZA+0.6,Math.PI/2,M.cer,0.4,0.2));
+ gP.add(g);sP.push({g,name:'RC süzgeç',short:'RC 1k/10n',a:[1.8,ZA],fp:[1.8,1.8],ly:0.7});}
+// 5 ΔΣ ADC
+{const g=new THREE.Group();const c=chip(1.3,0.85,0.12,'ADC','32-bit ΔΣ',14);c.position.set(4.6,0,ZA);g.add(c);
+ const r=chip(0.55,0.45,0.12,'REF','',4);r.position.set(4.3,0,ZA-1.2);g.add(r);g.add(smd(5.6,ZA+0.6,0));
+ gP.add(g);sP.push({g,name:'ΔΣ ADC',short:'ΔΣ ADC',a:[4.6,ZA],fp:[2.6,2.8],ly:1.0});}
+sP.push({g:null,name:'Mikroişlemci',short:'MCU',a:[2.0,0.5],fp:[3.0,3.0],ly:0.9,pad:'mcu',lpos:[0.8,1.1,1.5]});
+sP.push({g:null,name:'TFT ekran',short:'Ekran',a:[-2.4,2.6],fp:[5,3.6],ly:0,pad:'tft',lpos:[-4.8,3.45,2.6]});
+// öngerilim bloğu (süs)
+const biasG=new THREE.Group();gP.add(biasG);
+{const a=chip(0.55,0.45,0.12,'REF','',4);a.position.set(-5.6,0,0.1);biasG.add(a);
+ const b=chip(0.8,0.55,0.12,'DAC','',4);b.position.set(-4.6,0,0.1);biasG.add(b);
+ const c=chip(0.9,0.75,0.16,'Op-amp','',7);c.position.set(-3.4,0,0.1);biasG.add(c);
+ const bnc=cyl(0.38,1.0,M.metal,-8.3,0.5,0.1);bnc.rotation.z=Math.PI/2;biasG.add(bnc);biasG.add(box(0.8,0.8,0.9,M.metal,-7.8,0.45,0.1));}
+const segP=buildPath([
+  {cable:[[SRCX,0.6,0],[SRCX+1.5,0.2,0.4],[SRCX+2.2,-1.3,0.1],[-9.8,-0.6,-1.6],[-9.3,0.56,ZA],[-9.0,0.56,ZA]]},
+  [[-6.8,ZA],[-4.0,ZA]],
+  [[-4.0,ZA],[-4.0,ZA-1.9],[-1.1,ZA-1.9],[-1.1,ZA-1.2]],
+  [[-1.1,ZA+1.2],[-1.1,ZA+1.6],[1.8,ZA+1.6],[1.8,ZA]],
+  [[1.8,ZA],[4.6,ZA]],
+  [[4.6,ZA],[4.6,-0.6],[2.0,-0.6],[2.0,0.5]],
+  [[2.0,0.5],[2.7,0.5],[2.7,3.6],[-2.4,3.6],[-2.4,2.6]]
+],gP);
+gP.add(box(1.6,0.02,0.09,M.copper,-7.6,0.085,ZA));
+segP[0].pts.push(V3(-6.8,TY,ZA));segP[0].cum.push(segP[0].len+2.2);segP[0].len+=2.2;
+// geri besleme yolu: TIA çıkışı röle bankasına (Rf) — kısa iz
+gP.add(box(0.09,0.02,1.4,M.copper,-1.1,0.085,ZA+1.4));
+// MCU → sürücü → röle kontrol izi
+for(const [x1,z1,x2,z2] of [[-0.4,0.6,-0.4,-0.4],[-1.75,-0.4,-1.75,-1.3]]){const len=Math.hypot(x2-x1,z2-z1);const t=box(0.06,0.02,len,std(0x9a6a3a,.4,.8),(x1+x2)/2,0.085,(z1+z2)/2);gP.add(t);}
+
+/* pad'ler ve etiketler */
+function makePads(stages,group){
+  stages.forEach(s=>{
+    let p;
+    if(s.pad==='mcu'){p=glowPad(3.2,3.2,0x7fd4ff);p.position.set(MCU_POS[0],0.09,MCU_POS[2]);}
+    else if(s.pad==='tft'){p=glowPad(5.2,1.6,0x7fd4ff);p.position.set(-4.8,0.09,3.1);}
+    else if(s.pad==='gem'||s.pad==='src'){p=glowPad(s.fp[0],s.fp[1],0x7fd4ff);p.position.set(s.a[0],-0.2,s.a[1]);}
+    else{p=glowPad(s.fp[0],s.fp[1],0x7fd4ff);p.position.set(s.a[0],0.09,s.a[1]);}
+    group.add(p);s.padMesh=p;
+  });
+}
+makePads(sD,gD);makePads(sP,gP);
+const decoD=[{t:'YG −2500 V (harici)',p:[GEMX-2.6,2.2,-3.6]},{t:'Güç: Li-ion → ±5 V / 3,3 V',p:[5.9,1.4,3.0]}];
+const decoP=[{t:'Öngerilim ±10 V (DAC)',p:[-4.6,0.9,0.1]},{t:'Güç: Li-ion → ±5 V / 3,3 V',p:[5.9,1.4,3.0]}];
+
+/* paket (yük paketi) ve akım akışı */
+const packet=new THREE.Group();scene.add(packet);
+const pkS=[];for(let i=0;i<7;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex,color:i?0x7fd4ff:0xffffff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:1-i*0.13}));
+  const sc=i?0.7-i*0.07:0.95;s.scale.set(sc,sc,sc);packet.add(s);pkS.push(s);}
+const pLight=new THREE.PointLight(0x7fd4ff,1.2,4);packet.add(pLight);
+const NS=140;const sGeo=new THREE.BufferGeometry();const sPos=new Float32Array(NS*3);sGeo.setAttribute('position',new THREE.BufferAttribute(sPos,3));
+const sMat=new THREE.PointsMaterial({size:.24,map:dotTex,color:0x7fd4ff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9});
+const stream=new THREE.Points(sGeo,sMat);gP.add(stream);
+const streamU=[];for(let i=0;i<NS;i++)streamU.push(Math.random());
+
+/* ---------- etiket DOM ---------- */
+let lblEls=[];
+function buildLabels(){
+  labelsEl.innerHTML='';lblEls=[];
+  const st=cur().stages;
+  st.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='lbl';d.innerHTML='<b>'+(i+1)+'</b><span>'+s.short+'</span>';
+    d.addEventListener('click',e=>{e.stopPropagation();goStage(i,true);});
+    d.addEventListener('pointerdown',e=>e.stopPropagation());
+    labelsEl.appendChild(d);
+    const p=s.lpos?V3(...s.lpos):V3(s.a[0],(s.ly||1)+0.3,s.a[1]);
+    lblEls.push({el:d,p});
+  });
+  (state.mode==='D'?decoD:decoP).forEach(o=>{const d=document.createElement('div');d.className='lbl deco';d.innerHTML='<b></b><span>'+o.t+'</span>';labelsEl.appendChild(d);lblEls.push({el:d,p:V3(...o.p),deco:true});});
+}
+
+/* ---------- kamera ---------- */
+const cam={th:-0.36,ph:0.98,r:27,tgt:V3(-2.6,0.4,0),want:V3(-2.6,0.4,0)};
+let drag=null;const pointers=new Map();let userCamT=-99;
+viz.addEventListener('pointerdown',e=>{viz.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});userCamT=performance.now();});
+viz.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;const p=pointers.get(e.pointerId);
+  if(pointers.size===1){cam.th-=(e.clientX-p.x)*0.0065;cam.ph=clamp(cam.ph-(e.clientY-p.y)*0.005,0.22,1.45);}
+  else if(pointers.size===2){const ps=[...pointers.values()];const other=ps.find(q=>q!==p);
+    const d0=Math.hypot(p.x-other.x,p.y-other.y),d1=Math.hypot(e.clientX-other.x,e.clientY-other.y);
+    if(d0>0)cam.r=clamp(cam.r*d0/d1,9,48);}
+  p.x=e.clientX;p.y=e.clientY;userCamT=performance.now();
+});
+const endP=e=>{pointers.delete(e.pointerId);};
+viz.addEventListener('pointerup',endP);viz.addEventListener('pointercancel',endP);
+viz.addEventListener('wheel',e=>{e.preventDefault();cam.r=clamp(cam.r*(1+e.deltaY*0.0012),9,48);userCamT=performance.now();},{passive:false});
+
+/* =====================================================================
+   DURUM, AŞAMALAR, AÇIKLAMALAR
+   ===================================================================== */
+const state={mode:'D',stage:0,playing:!reduceMotion,phase:'dwell',tp:0,dwell:3.2,travel:0.7};
+const MODES={D:{stages:sD,segs:segD,group:gD},P:{stages:sP,segs:segP,group:gP}};
+const cur=()=>MODES[state.mode];
+
+function capD(i){
+  const ev=D.ev,s=ev.src,sh=ev.sh;
+  const Gc=1/D.cf;
+  switch(i){
+  case 0:return{t:'Gazlı dedektör',x:s.det+' Elektronlar okuma pedine ulaşınca kısa bir akım darbesi oluşur; darbenin alanı toplanan yüktür.',
+    kv:[['Kaynak',s.ad],['Bu darbenin yükü Q',dec(ev.Q,1)+' fC'],['Elektron sayısı',grp(ev.ne)+' e⁻'],['Akım tepe değeri',si(ev.ipk,'A')],['Darbe süresi',si(s.td,'s')],['Dedektör YG','−2500 V (harici modül)']]};
+  case 1:return{t:'SHV giriş + kuplaj',x:'Dedektör YG’yi Rb 10 MΩ (yüksek gerilim direnci) üzerinden alır. C402 1 nF / 6 kV, yüksek DC gerilimi keser ve yalnız hızlı yük darbesini yükseltece geçirir. R403 47 Ω ve korumalar girişi kıvılcıma karşı korur.',
+    kv:[['YG tarafı (DC)','−2500 V'],['Yükselteç tarafı (DC)','0 V'],['Geçen yük','≈ '+dec(ev.Q*0.99,1)+' fC (%99)'],['Kuplaj','C402 1 nF · 6 kV'],['Besleme direnci','Rb 10 MΩ']]};
+  case 2:return{t:'Yük duyarlı yükselteç (CSA)',x:'CSA op-amp’ı gelen yükü geri besleme kapasitöründe toplar: Vçıkış = −Q / Cf. Darbe kısa olsa da çıkış bir basamaktır. Rf = 100 MΩ kapasitörü τf = 100 µs ile boşaltır, bu yüzden uzun bir kuyruk kalır.',
+    kv:[['Cf ‖ Rf',D.cf===1?'1 pF ‖ 100 MΩ':'11 pF ‖ 9,1 MΩ (K402)'],['Kazanç',dec(Gc,Gc<1?3:0)+' mV/fC'],['Basamak',si(ev.csa.A,'V')],['Boşalma τf','100 µs'],['Yükselme','≈ 25 ns']]};
+  case 3:return{t:'Kutup-sıfır + CR türevi',x:D.pz?'Kutup-sıfır ağı (C406 100 pF ‖ R413 1 MΩ) 100 µs kuyruğu iptal eder, CR türevi darbeyi τ süreli kısa bir üstele çevirir. Taban çizgisi hızla sıfıra döner, darbeler üst üste binmez.':'Kutup-sıfır kapalı: CR türevi 100 µs kuyruğun türevini de alır ve taban çizgisinin altına uzun bir sarkma kalır. Yüksek sayım hızında bir sonraki darbe bu sarkmanın üstüne biner, tepe değeri kayar.',
+    kv:[['τ',si(D.tau*1e-6,'s')],['Tepe',si(sh.crMin,'V')],['Alt sarkma',si(sh.crMax>0?sh.crMax:0,'V')],['PZ ağı','C406 100 pF ‖ R413 1 MΩ']]};
+  case 4:return{t:'RC-RC şekillendirici',x:'İki aktif RC integratör (her biri ×2) üsteli yarı-Gauss biçime çevirir: CR-(RC)². Tepe yaklaşık 2τ’da oluşur. Bant daraldığı için gürültü azalır. Toplam kazanç 1,083 mV/fC.',
+    kv:[['τ',si(D.tau*1e-6,'s')],['Tepe zamanı','≈ '+si(2*D.tau*1e-6,'s')],['Tepe',si(-sh.pk/D.pga,'V')],['Gürültü σ',si(noiseShaped(D.tau),'V')],['Kazanç',dec(KSH/D.cf,3)+' mV/fC']]};
+  case 5:{const pk=sh.pk;return{t:'Kutup seçimi + PGA',x:'Analog anahtar darbeyi pozitif yöne çevirir. Programlanabilir kazanç (×1 / ×4 / ×16) tepeyi ADC aralığına (0–3,3 V) taşır. Büyük darbelerde ×16 doyuma girer.',
+    kv:[['PGA','×'+D.pga],['Çıkış tepe',si(pk,'V')],['ADC aralığı kullanımı','%'+dec(clamp(pk/3.3*100,0,100),1)],['Durum',pk>=3.39?'DOYUM':'normal']]};}
+  case 6:return{t:'Komparatör ve sayaç (MCU)',x:'MCU’nun dahili komparatörü darbeyi DAC’ın verdiği eşikle karşılaştırır. Eşik aşılınca donanım sayacı bir artar ve tepe yakalama başlar. Eşiğin altında kalan gürültü ve küçük darbeler sayılmaz.',
+    kv:[['Eşik (DAC)',dec(D.thr,0)+' mV'],['Bu darbe',ev.counted?'sayıldı':'eşik altında'],['Toplam sayım',grp(D.total)],['Sayım hızı',grp(D.rateEst)+' /s']]};
+  case 7:return{t:'Tepe tutucu',x:'U408 + D403 + C409 (1 nF) darbenin en yüksek değerini tutar ve ADC ölçene kadar bekletir. Ardından firmware C409’u boşaltır. C428 22 pF tepe hatasını düşürür; kalan hata PULS:CAL ile düzeltilir.',
+    kv:[['Tutulan gerilim',si(ev.vS,'V')],['ADC örnek anı','t = 5τ = '+si(5*D.tau*1e-6,'s')],['Boşaltma','t = 8τ'],['Tutma kapasitörü','C409 1 nF']]};
+  case 8:{const st=histStats();const qch=3.3/1024/(KSH*1e-3/D.cf*D.pga);
+    return{t:'ADC → MCA (MCU)',x:'MCU’nun dahili ADC’si (12 bit) tutulan gerilimi okur: kod = V / 3,3 V × 4095. Firmware kodu 4’e bölüp 1024 kanallı MCA’da o kanalı bir artırır. Kanal × kalibrasyon katsayısı = enerji.',
+    kv:[['ADC kodu',grp(ev.code)+' / 4095'],['Kanal',ev.ch+' / 1023'],['Kanal başına yük',dec(qch,qch<1?3:2)+' fC'],['Enerji',s.E0?dec(ev.ch/Math.max(1,chExpected())*s.E0,2)+' '+s.eu:'—'],['Ana tepe kanalı',st.peak!=null?String(st.peak):'birikiyor']]};}
+  case 9:{const st=histStats();return{t:'TFT ekran',x:'3,5" ekran MCA spektrumunu, sayım hızını ve ayarları gösterir. Fe-55’te 5,9 keV ana tepe ile 2,9 keV argon kaçış tepesi görünür. Çözünürlük tepe genişliğinden (FWHM) okunur.',
+    kv:[['Toplam sayım',grp(D.total)],['Sayım hızı',grp(D.rateEst)+' /s'],['Ana tepe kanalı',st.peak!=null?String(st.peak):'—'],['FWHM',st.peak!=null?'%'+dec(st.fwhm,1):'—']]};}
+  }
+}
+function capP(i){
+  const R=RNG[P.r];const pre=PRE_P[P.pre];
+  switch(i){
+  case 0:return{t:'Akım kaynağı',x:P.kind==='pd'?'Fotodiyot ters öngerilimde karanlıkta birkaç pA kaçak akım verir. Işık arttıkça foto akım nA’den µA’e çıkar. Akım triaks kablo ile cihaza girer.':'İyon odasında radyasyon gazı iyonlaştırır. Öngerilim iyonları elektrota toplar; ölçülen akım doz hızıyla orantılıdır. Doğal fonda akım fA mertebesindedir.',
+    kv:[['Ölçüm',pre.ad],['Akım I',si(P.I,'A',4)],['Saniyede yük taşıyıcı',grp(P.I/1.602e-19)+' e/s'],['Öngerilim (BNC)',dec(VB,3)+' V']]};
+  case 1:return{t:'Triaks giriş + koruma',x:'J101 triaks konnektörünün iç örgüsü guard potansiyelinde sürülür. Giriş ile guard arasında fark ≈ 0 olduğu için kablo kaçağı ve kapasitesi ölçüme girmez. R101 10 kΩ ve düşük kaçaklı koruma diyotları girişi aşırı gerilime karşı korur.',
+    kv:[['Guard − giriş farkı','< 10 µV'],['Koruma diyodu kaçağı (0 V’ta)','< 1 fA'],['R101 üzerindeki düşüm',si(P.I*1e4,'V')],['R101 konumu','geri besleme döngüsü içinde']]};
+  case 2:return{t:'Transempedans yükselteç (TIA)',x:'Elektrometre sınıfı op-amp akımı geri besleme direnci Rf üzerinden gerilime çevirir: Vçıkış = −I · Rf. 10 GΩ kademesinde 1 pA, −10 mV verir. Cf, Rf ile birlikte bant genişliğini ve kararlılığı belirler.',
+    kv:[['Rf ‖ Cf',R.rf+' ‖ '+R.cf],['Vçıkış',si(P.V,'V')],['Bant genişliği',R.bw],['Zaman sabiti',si(tauR(P.r),'s')],['Giriş gürültüsü (10 GΩ)','1,29 fA/√Hz']]};
+  case 3:return{t:'Kademe röleleri (otomatik)',x:'Firmware |Vçıkış| tam ölçeğin %95’ini aşınca bir üst kademeye, %0,75’in altına inince bir alta geçer. Röle önce yeni yolu kapatır, sonra eskisini açar. 10 GΩ yolu her zaman bağlıdır; geçişten sonra birkaç örnek atlanır.',
+    kv:[['Aktif kademe',(P.r+1)+' · '+R.lbl+' tam ölçek'],['Kullanım','%'+dec(Math.abs(P.V)/2*100,2)],['Kapalı röle',R.k],['Mod',P.auto?'otomatik':'el ile']]};
+  case 4:return{t:'RC süzgeç',x:'R107 1 kΩ / C107 10 nF (fc ≈ 16 kHz) ADC girişindeki örnekleme anahtarının çektiği kısa akımları yumuşatır ve yüksek frekans gürültüsünü (örtüşme) keser.',
+    kv:[['Kesim frekansı','15,9 kHz'],['ADC girişi',si(P.Vrc,'V')],['Ek hata','< 1 µV']]};
+  case 5:return{t:'ΔΣ ADC',x:'32 bit ΔΣ ADC farksal girişi (AIN0 − AIN1) saniyede 20 örnekle, sinc4 + FIR süzgeçle ölçer. 1 LSB = 2 · 2,5 V / 2³² ≈ 1,16 nV.',
+    kv:[['Kod',P.code.toString()],['Kod (hex)','0x'+((P.code>>>0).toString(16).toUpperCase().padStart(8,'0'))],['Örnekteki gerilim',si(P.Vs,'V')],['Örnek hızı','20 SPS'],['Durum',P.over?'ARALIK DIŞI':'normal']]};
+  case 6:return{t:'Mikroişlemci',x:'MCU kodu SPI ile okur: V = kod × 2,5 V / 2³¹, I = −V / Rf. Son N örneğin ortalamasını alır, birimi otomatik seçer ve röleleri bir röle sürücüsü üzerinden sürer.',
+    kv:[['V',si(P.Vs,'V')],['Rf (kalibre)',R.rf],['I (tek örnek)',si(P.Iraw,'A',4)],['I (N='+P.N+' ortalama)',si(P.Iavg,'A',4)],['Bekleyen örnek',P.blank?String(P.blank)+' (kademe geçişi)':'0']]};
+  case 7:return{t:'TFT ekran',x:'Ekran akımı büyük puntoyla, aktif kademeyi, öngerilimi ve son 5 saniyenin eğilimini gösterir. Kademe geçişlerinde değer kısa süre bekletilir.',
+    kv:[['Gösterilen',P.over?'ARALIK DIŞI':si(P.Iavg,'A',4)],['Kademe',R.lbl],['Gerçek akım',si(P.I,'A',4)],['Hata',isFinite(P.Iavg)&&P.I>0?'%'+dec((P.Iavg-P.I)/P.I*100,2):'—']]};
+  }
+}
+let lastCap=0;
+function renderCaption(force){
+  const now=performance.now();if(!force&&now-lastCap<180)return;lastCap=now;
+  const c=state.mode==='D'?capD(state.stage):capP(state.stage);
+  $('stTitle').innerHTML='<small>'+(state.stage+1)+' / '+cur().stages.length+'</small>'+c.t;
+  if($('stText').textContent!==c.x)$('stText').textContent=c.x;
+  $('stKV').innerHTML=c.kv.map(([k,v])=>'<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
+}
+
+/* =====================================================================
+   OSİLOSKOP
+   ===================================================================== */
+const scope=$('scope');let sctx=scope.getContext('2d');
+function nice(x){if(!(x>0))return 1e-3;const e=Math.floor(Math.log10(x));const f=x/Math.pow(10,e);return (f<=1?1:f<=2?2:f<=5?5:10)*Math.pow(10,e);}
+function prepCanvas(cv){
+  const dpr=Math.min(2,window.devicePixelRatio||1);const w=cv.clientWidth,h=cv.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w,h};
+}
+function drawScope(sp){
+  const {g,w,h}=prepCanvas(scope);
+  g.fillStyle=C.sbg;g.fillRect(0,0,w,h);
+  const x0=8,y0=22,pw=w-16,ph=h-44;
+  // ızgara
+  g.strokeStyle='rgba(127,212,255,0.09)';g.lineWidth=1;
+  for(let i=0;i<=10;i++){const x=x0+pw*i/10;g.beginPath();g.moveTo(x+.5,y0);g.lineTo(x+.5,y0+ph);g.stroke();}
+  for(let j=0;j<=8;j++){const y=y0+ph*j/8;g.beginPath();g.moveTo(x0,y+.5);g.lineTo(x0+pw,y+.5);g.stroke();}
+  g.strokeStyle='rgba(127,212,255,0.2)';
+  g.beginPath();g.moveTo(x0+pw/2+.5,y0);g.lineTo(x0+pw/2+.5,y0+ph);g.moveTo(x0,y0+ph/2+.5);g.lineTo(x0+pw,y0+ph/2+.5);g.stroke();
+  g.font='600 11px JetBrains Mono, monospace';g.textBaseline='alphabetic';
+  g.fillStyle=C.sig;g.fillText(sp.title||'',x0,15);
+  if(sp.right){g.textAlign='right';g.fillStyle=C.copper;g.fillText(sp.right,x0+pw,15);g.textAlign='left';}
+  if(sp.hist){drawHist(g,x0,y0,pw,ph,sp);return;}
+  const xs=sp.xs,ys=sp.ys,N=xs.length;if(!N){g.fillStyle=C.muted;g.fillText('veri bekleniyor',x0+10,y0+30);return;}
+  const xa=sp.x0!=null?sp.x0:xs[0],xb=sp.x1!=null?sp.x1:xs[N-1];
+  let lo,hi,vdiv;
+  if(sp.yr){lo=sp.yr[0];hi=sp.yr[1];vdiv=(hi-lo)/8;}
+  else{
+    let mn=Infinity,mx=-Infinity;const arrs=[ys].concat(sp.ghost?[sp.ghost]:[]);
+    for(const a of arrs)for(let i=0;i<a.length;i++){const v=a[i];if(isFinite(v)){if(v<mn)mn=v;if(v>mx)mx=v;}}
+    if(sp.hl)for(const l of sp.hl){if(l.fit){mn=Math.min(mn,l.v);mx=Math.max(mx,l.v);}}
+    if(!isFinite(mn)){mn=-1;mx=1;}
+    const span=Math.max(Math.abs(mn),Math.abs(mx))||1e-3;
+    let zd;
+    if(mn>=-0.06*Math.abs(mx)){zd=1;vdiv=nice(Math.max(mx,1e-18)/6.3);}
+    else if(mx<=0.06*Math.abs(mn)){zd=7;vdiv=nice(Math.max(-mn,1e-18)/6.3);}
+    else{zd=4;vdiv=nice(span/3.4);}
+    lo=-zd*vdiv;hi=lo+8*vdiv;
+  }
+  const X=x=>x0+(x-xa)/(xb-xa)*pw,Y=v=>y0+ph-(v-lo)/(hi-lo)*ph;
+  // sıfır işareti
+  if(lo<=0&&hi>=0){const y=Y(0);g.fillStyle=C.sig;g.beginPath();g.moveTo(x0,y-5);g.lineTo(x0+7,y);g.lineTo(x0,y+5);g.fill();}
+  // yatay çizgiler
+  if(sp.hl)for(const l of sp.hl){const y=Y(l.v);if(y<y0-1||y>y0+ph+1)continue;g.strokeStyle=l.c||C.hot;g.setLineDash([5,4]);g.beginPath();g.moveTo(x0,y);g.lineTo(x0+pw,y);g.stroke();g.setLineDash([]);
+    g.fillStyle=l.c||C.hot;g.font='10px JetBrains Mono, monospace';g.textAlign='right';g.fillText(l.t,x0+pw-3,y-4);g.textAlign='left';}
+  if(sp.vl)sp.vl.forEach((l,vi)=>{const x=X(l.x);if(x<x0||x>x0+pw)return;g.strokeStyle=C.copper;g.setLineDash([3,3]);g.beginPath();g.moveTo(x,y0);g.lineTo(x,y0+ph);g.stroke();g.setLineDash([]);
+    g.fillStyle=C.copper;g.font='10px JetBrains Mono, monospace';g.fillText(l.t,Math.min(x+3,x0+pw-60),y0+12+(vi%3)*12);});
+  const nRev=Math.max(2,Math.floor(N*(sp.reveal==null?1:sp.reveal)));
+  const line=(arr,col,wid,glow,n)=>{
+    g.save();g.beginPath();g.rect(x0,y0,pw,ph);g.clip();
+    g.strokeStyle=col;g.lineWidth=wid;g.lineJoin='round';if(glow){g.shadowColor=col;g.shadowBlur=glow;}
+    g.beginPath();let st=false;
+    for(let i=0;i<n;i++){const v=arr[i];if(!isFinite(v)){st=false;continue;}const x=X(xs[i]),y=Y(v);
+      if(sp.stairs&&st){g.lineTo(x,Y(arr[i-1]));}
+      st?g.lineTo(x,y):g.moveTo(x,y);st=true;}
+    g.stroke();g.restore();
+  };
+  if(sp.ghost)line(sp.ghost,'rgba(227,163,94,0.55)',1.2,0,nRev);
+  line(ys,C.sig,1.8,8,nRev);
+  if(sp.dots){g.fillStyle=C.sig;for(let i=0;i<nRev;i++){if(!isFinite(ys[i]))continue;g.beginPath();g.arc(X(xs[i]),Y(ys[i]),2.2,0,7);g.fill();}}
+  if(sp.logic){const ly=y0+4,lh=14;g.save();g.beginPath();g.rect(x0,y0,pw,ph);g.clip();
+    g.strokeStyle=C.ok;g.lineWidth=1.6;g.shadowColor=C.ok;g.shadowBlur=6;g.beginPath();
+    for(let i=0;i<nRev;i++){const x=X(xs[i]),y=sp.logic[i]?ly:ly+lh;if(i===0)g.moveTo(x,y);else{const yp=sp.logic[i-1]?ly:ly+lh;if(yp!==y)g.lineTo(x,yp);g.lineTo(x,y);}}
+    g.stroke();g.restore();g.fillStyle=C.ok;g.font='10px JetBrains Mono, monospace';g.fillText(sp.logicName||'D',x0+4,ly+lh+12);}
+  if(sp.mk)for(const m of sp.mk){if(m.i!=null&&m.i>nRev)continue;const x=X(m.x),y=Y(m.y);g.fillStyle=m.c||C.copper;g.beginPath();g.arc(x,y,4,0,7);g.fill();
+    g.font='600 11px JetBrains Mono, monospace';const tw=g.measureText(m.t).width;const tx=clamp(x+8,x0+2,x0+pw-tw-2),ty=clamp(y-8,y0+12,y0+ph-4);
+    g.fillStyle='rgba(6,16,23,.8)';g.fillRect(tx-3,ty-11,tw+6,15);g.fillStyle=m.c||C.copper;g.fillText(m.t,tx,ty);}
+  // alt satır
+  g.font='11px JetBrains Mono, monospace';g.fillStyle=C.muted;
+  const tu=sp.xu||'s';const hdiv=(xb-xa)/10;
+  g.fillText((sp.xlab?sp.xlab+'  ':'')+si(hdiv,tu,2)+'/div',x0,h-7);
+  g.textAlign='right';g.fillText(sp.yu==='%'?dec(vdiv,1)+' %/div':si(vdiv,sp.yu||'V',2)+'/div',x0+pw,h-7);g.textAlign='left';
+}
+function drawHist(g,x0,y0,pw,ph,sp){
+  const h=sp.hist;let mx=1;for(let i=0;i<1024;i++)if(h[i]>mx)mx=h[i];
+  const top=nice(mx*1.08);
+  g.save();g.beginPath();g.rect(x0,y0,pw,ph);g.clip();
+  g.fillStyle='rgba(127,212,255,0.85)';g.shadowColor=C.sig;g.shadowBlur=6;
+  const bw=pw/1024;
+  for(let i=0;i<1024;i++){if(!h[i])continue;const bh=h[i]/top*ph;g.fillRect(x0+i*bw,y0+ph-bh,Math.max(1,bw),bh);}
+  g.restore();
+  if(sp.thrCh!=null){const x=x0+sp.thrCh*bw;g.strokeStyle=C.hot;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,y0);g.lineTo(x,y0+ph);g.stroke();g.setLineDash([]);
+    g.fillStyle=C.hot;g.font='10px JetBrains Mono, monospace';g.fillText('eşik',Math.min(x+3,x0+pw-30),y0+ph-6);}
+  if(sp.cur!=null){const x=x0+sp.cur*bw;g.fillStyle=C.copper;g.beginPath();g.moveTo(x-5,y0);g.lineTo(x+5,y0);g.lineTo(x,y0+8);g.fill();
+    g.font='10px JetBrains Mono, monospace';g.fillText('son darbe k.'+sp.cur,clamp(x-40,x0,x0+pw-90),y0+20);}
+  g.font='11px JetBrains Mono, monospace';g.fillStyle=C.muted;g.fillText('kanal 0 … 1023',x0,y0+ph+15);
+  g.textAlign='right';g.fillText(si(top/8,'',2).trim()+' sayım/div',x0+pw,y0+ph+15);g.textAlign='left';
+}
+function scopeSpecD(i,rev){
+  const ev=D.ev,sh=ev.sh;
+  switch(i){
+  case 0:return{title:'Okuma pedi akımı i(t)',right:'Q = '+dec(ev.Q,1)+' fC',xs:ev.det.xs,ys:ev.det.ys,yu:'A',reveal:rev,
+    mk:[{x:ev.src.td*1.05,y:ev.ipk,t:si(ev.ipk,'A'),i:Math.round(ev.det.xs.length*0.33)}]};
+  case 1:return{title:'C402 sonrası (DC kesildi)',right:'YG: −2500 V → 0 V',xs:ev.det.xs,ys:Array.from(ev.det.ys,v=>v*0.99),yu:'A',reveal:rev,
+    hl:[{v:0,t:'DC 0 V',c:C.ok}]};
+  case 2:return{title:'CSA çıkışı (U401)',right:dec(1/D.cf,D.cf===1?0:3)+' mV/fC',xs:ev.csa.xs,ys:ev.csa.ys,reveal:rev,
+    mk:[{x:12e-6,y:ev.csa.A,t:si(ev.csa.A,'V')+' basamak'},{x:100e-6,y:ev.csa.A*Math.exp(-1),t:'τf = 100 µs'}]};
+  case 3:return{title:'Kutup-sıfır + CR çıkışı',right:D.pz?'PZ açık':'PZ kapalı',xs:sh.xs,ys:sh.cr,reveal:rev,
+    mk:[{x:sh.xs[2],y:sh.crMin,t:si(sh.crMin,'V')}]};
+  case 4:{const pk=-sh.pk/D.pga;return{title:'Şekillendirici çıkışı (RC-RC)',right:'τ = '+si(D.tau*1e-6,'s'),xs:sh.xs,ys:sh.sh,ghost:sh.cr,reveal:rev,
+    mk:[{x:2*D.tau*1e-6,y:pk,t:si(pk,'V')+' @ 2τ',i:Math.round(sh.xs.length/6)}]};}
+  case 5:return{title:'Kutup + PGA çıkışı (PULSE_OUT)',right:'×'+D.pga,xs:sh.xs,ys:sh.pg,reveal:rev,
+    hl:[{v:3.3,t:'3,3 V ADC üst sınır',c:C.hot,fit:sh.pk>2.4}],mk:[{x:2*D.tau*1e-6,y:sh.pk,t:si(sh.pk,'V'),i:Math.round(sh.xs.length/6)}]};
+  case 6:return{title:'Komparatör: darbe ve eşik',right:ev.counted?'sayaç +1':'sayılmadı',xs:sh.xs,ys:sh.pg,reveal:rev,
+    hl:[{v:thrV(),t:'eşik '+D.thr+' mV',c:C.hot,fit:true}],logic:sh.cmp,logicName:'Komparatör çıkışı'};
+  case 7:return{title:'Tepe tutucu (C409)',right:'tutulan '+si(ev.vS,'V'),xs:sh.xs,ys:sh.ph,ghost:sh.pg,reveal:rev,
+    vl:[{x:sh.xs[sh.iReset],t:'reset'}]};
+  case 8:return{title:'ADC örneği',right:'kod '+ev.code+' → k.'+ev.ch,xs:sh.xs,ys:sh.ph,reveal:rev,
+    vl:[{x:sh.xs[sh.iS],t:'ADC'}],mk:[{x:sh.xs[sh.iS],y:ev.vS,t:'kod '+ev.code,i:sh.iS}]};
+  case 9:return{title:'MCA spektrumu',right:grp(D.total)+' sayım',hist:D.hist,thrCh:chanOf(thrV()),cur:ev.counted?ev.ch:null};
+  }
+}
+function scopeSpecP(i){
+  const tr=P.trace,sm=P.samples,t1=P.t,t0=t1-5;
+  const xs=tr.map(o=>o.t-t1);const vl=P.events.map(e=>({x:e.t-t1,t:'K'+(e.from+1)+'→K'+(e.to+1)}));
+  const R=RNG[P.r];
+  switch(i){
+  case 0:return{title:'Kaynak akımı I(t)',right:si(P.I,'A',4),xs,ys:tr.map(o=>o.I),yu:'A',x0:-5,x1:0,xlab:'son 5 s'};
+  case 1:return{title:'J101 → R101 → TIA girişi',right:'guard ≈ giriş',xs,ys:tr.map(o=>o.I),yu:'A',x0:-5,x1:0,xlab:'son 5 s'};
+  case 2:return{title:'TIA çıkışı Vç = −I·Rf',right:'Rf '+R.rf,xs,ys:tr.map(o=>o.V),x0:-5,x1:0,vl,xlab:'son 5 s',
+    hl:[{v:-2,t:'−2 V tam ölçek',c:C.hot,fit:Math.abs(P.V)>1}]};
+  case 3:return{title:'Tam ölçek kullanımı |Vç| / 2 V',right:'kademe '+(P.r+1)+' · '+R.lbl,xs,ys:tr.map(o=>Math.min(125,Math.abs(o.V)/2*100)),yu:'%',yr:[0,120],x0:-5,x1:0,vl,xlab:'son 5 s',
+    hl:[{v:95,t:'%95 → üst kademe',c:C.hot},{v:0.75,t:'%0,75 → alt kademe',c:C.ok}]};
+  case 4:return{title:'RC süzgeç sonrası (ADC girişi)',right:'fc 15,9 kHz',xs,ys:tr.map(o=>o.V),x0:-5,x1:0,vl,xlab:'son 5 s'};
+  case 5:{const last=sm[sm.length-1];return{title:'ADC örnekleri (20 SPS)',right:last?'kod '+last.code:'',xs:sm.map(o=>o.t-t1),ys:sm.map(o=>o.Vs),stairs:true,dots:true,x0:-5,x1:0,vl,xlab:'son 5 s'};}
+  case 6:return{title:'MCU: I = −V/Rf ve ortalama',right:'N = '+P.N,xs:sm.map(o=>o.t-t1),ys:sm.map(o=>o.valid?o.Iavg:NaN),ghost:sm.map(o=>o.valid?o.Iraw:NaN),yu:'A',stairs:true,x0:-5,x1:0,vl,xlab:'son 5 s',
+    hl:[{v:P.I,t:'gerçek',c:C.ok}]};
+  case 7:return{title:'Ekrana giden değer',right:P.over?'ARALIK DIŞI':si(P.Iavg,'A',4),xs:sm.map(o=>o.t-t1),ys:sm.map(o=>o.valid?o.Iavg:NaN),yu:'A',stairs:true,x0:-5,x1:0,vl,xlab:'son 5 s'};
+  }
+}
+
+/* =====================================================================
+   TFT ÇİZİMİ (480×320)
+   ===================================================================== */
+const tg=tftCanvas.getContext('2d');
+function tftHeader(l,r){tg.fillStyle='#000';tg.fillRect(0,0,480,320);tg.fillStyle='#0b2236';tg.fillRect(0,0,480,32);
+  tg.font='600 16px JetBrains Mono, monospace';tg.fillStyle='#e8f1f6';tg.textBaseline='middle';tg.fillText(l,10,17);
+  tg.textAlign='right';tg.fillStyle='#ffc27a';tg.fillText(r,470,17);tg.textAlign='left';
+}
+function drawTftD(){
+  const st=histStats();
+  tftHeader('LCPA-1D  MCA','τ '+(D.tau<1?'0,25':D.tau)+'µs  ×'+D.pga+'  '+D.thr+'mV');
+  const x0=44,y0=46,w=424,h=196;
+  tg.strokeStyle='#1d3344';tg.lineWidth=1;
+  for(let i=0;i<=4;i++){const x=x0+w*i/4;tg.beginPath();tg.moveTo(x+.5,y0);tg.lineTo(x+.5,y0+h);tg.stroke();}
+  for(let j=0;j<=4;j++){const y=y0+h*j/4;tg.beginPath();tg.moveTo(x0,y+.5);tg.lineTo(x0+w,y+.5);tg.stroke();}
+  let mx=1;for(let i=0;i<1024;i++)if(D.hist[i]>mx)mx=D.hist[i];
+  const top=nice(mx*1.1);
+  tg.fillStyle='#ffb347';
+  for(let px=0;px<w;px++){const c0=Math.floor(px/w*1024),c1=Math.floor((px+1)/w*1024);let s=0;for(let c=c0;c<c1;c++)s=Math.max(s,D.hist[c]);
+    if(s>0){const bh=s/top*h;tg.fillRect(x0+px,y0+h-bh,1,bh);}}
+  const tc=chanOf(thrV())/1024*w+x0;tg.strokeStyle='#ff5c4a';tg.setLineDash([4,3]);tg.beginPath();tg.moveTo(tc,y0);tg.lineTo(tc,y0+h);tg.stroke();tg.setLineDash([]);
+  if(st.peak!=null){const px=x0+st.peak/1024*w;tg.fillStyle='#7fd4ff';tg.beginPath();tg.moveTo(px-5,y0-2);tg.lineTo(px+5,y0-2);tg.lineTo(px,y0+6);tg.fill();}
+  tg.font='12px JetBrains Mono, monospace';tg.fillStyle='#7f93a3';tg.textBaseline='alphabetic';
+  ['0','256','512','768','1023'].forEach((t,i)=>{tg.textAlign=i===0?'left':i===4?'right':'center';tg.fillText(t,x0+w*i/4,y0+h+15);});
+  tg.textAlign='right';tg.fillText(String(Math.round(top)),x0-4,y0+10);tg.fillText('0',x0-4,y0+h);tg.textAlign='left';
+  const box=(x,lab,val)=>{tg.fillStyle='#0a1620';tg.fillRect(x,272,150,42);tg.fillStyle='#7f93a3';tg.font='11px JetBrains Mono, monospace';tg.fillText(lab,x+8,286);
+    tg.fillStyle='#e8f1f6';tg.font='600 17px JetBrains Mono, monospace';tg.fillText(val,x+8,308);};
+  box(6,'SAYIM',grp(D.total));box(165,'HIZ',grp(D.rateEst)+' /s');
+  box(324,'TEPE · FWHM',st.peak!=null?('k'+st.peak+' · %'+dec(st.fwhm,0)):'—');
+}
+function drawTftP(){
+  const R=RNG[P.r];
+  tftHeader('LCPA-1P  AKIM',(P.auto?'OTO':'EL')+'  K'+(P.r+1)+'  20 SPS');
+  tg.textBaseline='alphabetic';
+  let main,unit;
+  if(P.over){main='ARALIK DIŞI';unit='';}
+  else if(!isFinite(P.Iavg)){main='– – – –';unit='';}
+  else{const s=si(P.Iavg,'A',4).split(' ');main=s[0];unit=s[1]||'A';}
+  tg.fillStyle=P.blank?'#7f93a3':'#e8f1f6';tg.font='600 '+(P.over?50:78)+'px JetBrains Mono, monospace';
+  const mw=tg.measureText(main).width;tg.font='600 38px JetBrains Mono, monospace';const uw=tg.measureText(unit).width;
+  const sx=Math.max(10,(480-mw-uw-14)/2);
+  tg.font='600 '+(P.over?50:78)+'px JetBrains Mono, monospace';tg.fillStyle=P.over?'#ff5c4a':(P.blank?'#7f93a3':'#e8f1f6');tg.fillText(main,sx,126);
+  tg.font='600 38px JetBrains Mono, monospace';tg.fillStyle='#ffb347';tg.fillText(unit,sx+mw+14,126);
+  tg.font='13px JetBrains Mono, monospace';tg.fillStyle='#7f93a3';
+  tg.fillText('Kademe '+(P.r+1)+': '+R.lbl+' tam ölçek · Rf '+R.rf,14,158);
+  // kullanım çubuğu
+  const u=clamp(Math.abs(P.V)/2,0,1);tg.fillStyle='#0a1620';tg.fillRect(14,168,452,12);
+  tg.fillStyle=u>0.95?'#ff5c4a':'#7fd4ff';tg.fillRect(14,168,452*u,12);
+  tg.fillStyle='#ff5c4a';tg.fillRect(14+452*0.95,166,2,16);
+  // eğilim
+  const sm=P.samples.filter(s=>s.valid&&isFinite(s.Iavg));const x0=14,y0=196,w=452,h=82;
+  tg.strokeStyle='#1d3344';tg.strokeRect(x0+.5,y0+.5,w,h);
+  if(sm.length>1){let mn=Infinity,mx=-Infinity;sm.forEach(s=>{mn=Math.min(mn,s.Iavg);mx=Math.max(mx,s.Iavg);});
+    if(mx-mn<Math.abs(mx)*0.02){const c=(mx+mn)/2,d=Math.abs(c)*0.01+1e-18;mn=c-d;mx=c+d;}
+    tg.strokeStyle='#7fd4ff';tg.lineWidth=2;tg.beginPath();
+    sm.forEach((s,i)=>{const x=x0+(s.t-(P.t-5))/5*w,y=y0+h-6-(s.Iavg-mn)/(mx-mn)*(h-12);i?tg.lineTo(x,y):tg.moveTo(x,y);});tg.stroke();tg.lineWidth=1;
+    tg.fillStyle='#7f93a3';tg.font='11px JetBrains Mono, monospace';tg.fillText(si(mx,'A',3),x0+4,y0+12);tg.fillText(si(mn,'A',3),x0+4,y0+h-4);}
+  tg.font='12px JetBrains Mono, monospace';tg.fillStyle='#7f93a3';
+  tg.fillText('Öngerilim '+dec(VB,3)+' V    N='+P.N+'    son 5 s',14,304);
+}
+
+/* =====================================================================
+   ARAYÜZ
+   ===================================================================== */
+function seg(el,opts,get,set){
+  el.innerHTML='';opts.forEach(([v,t])=>{const b=document.createElement('button');b.textContent=t;b.type='button';
+    b.addEventListener('click',()=>{set(v);sync();});el.appendChild(b);b._v=v;});
+  el._get=get;
+}
+function syncSeg(el){[...el.children].forEach(b=>b.setAttribute('aria-pressed',String(b._v===el._get())));}
+seg($('segTau'),[[0.25,'0,25 µs'],[1,'1 µs'],[4,'4 µs'],[10,'10 µs']],()=>D.tau,v=>{D.tau=v;D.hist.fill(0);D.total=0;newEvent();});
+seg($('segPga'),[[1,'×1'],[4,'×4'],[16,'×16']],()=>D.pga,v=>{D.pga=v;D.hist.fill(0);D.total=0;newEvent();});
+seg($('segCf'),[[1,'1 pF · 1 mV/fC'],[11,'11 pF · 0,091 mV/fC']],()=>D.cf,v=>{D.cf=v;D.hist.fill(0);D.total=0;newEvent();});
+seg($('segRng'),[['auto','Oto'],[0,'200 pA'],[1,'20 nA'],[2,'2 µA'],[3,'200 µA'],[4,'2 mA']],()=>P.auto?'auto':P.r,v=>{
+  if(v==='auto'){P.auto=true;}else{P.auto=false;if(P.r!==v){P.events.push({t:P.t,from:P.r,to:v});P.r=v;P.blank=2;P.avg=[];}}});
+seg($('segN'),[[1,'1'],[4,'4'],[16,'16'],[64,'64']],()=>P.N,v=>{P.N=v;});
+function sync(){
+  ['segTau','segPga','segCf','segRng','segN'].forEach(id=>syncSeg($(id)));
+  $('thrv').textContent=D.thr+' mV';$('ratev').textContent=grp(D.rate)+' olay/s';$('testQv').textContent=D.testQ+' fC';
+  $('testRow').hidden=D.src!=='test';
+  $('iv').textContent=si(P.I,'A',3);
+  renderCaption(true);
+}
+$('srcD').addEventListener('change',e=>{D.src=e.target.value;D.hist.fill(0);D.total=0;D.thr=D.src==='alfa'?8:D.src==='test'?20:20;$('thr').value=D.thr;newEvent();sync();});
+$('testQ').addEventListener('input',e=>{D.testQ=+e.target.value;D.hist.fill(0);D.total=0;newEvent();sync();});
+$('thr').addEventListener('input',e=>{D.thr=+e.target.value;D.hist.fill(0);D.total=0;newEvent(true);sync();});
+$('rate').addEventListener('input',e=>{D.rate=+e.target.value;sync();});
+$('pz').addEventListener('change',e=>{D.pz=e.target.checked;newEvent(true);sync();});
+$('bNew').addEventListener('click',()=>{newEvent();if(state.stage!==0)state.tp=0;});
+$('bClr').addEventListener('click',()=>{D.hist.fill(0);D.total=0;sync();});
+function setPreset(k){P.pre=k;const p=PRE_P[k];if(p.I!=null){P.I=p.I;$('iexp').value=Math.log10(p.I).toFixed(2);}P.kind=p.kind;sync();}
+$('srcP').addEventListener('change',e=>setPreset(e.target.value));
+$('iexp').addEventListener('input',e=>{P.I=Math.pow(10,+e.target.value);if(P.pre!=='custom'){P.pre='custom';$('srcP').value='custom';}sync();});
+
+function newEvent(sameQ){D.ev=makeEvent(sameQ&&D.ev?D.ev.Q:null);}
+
+function buildChain(){
+  const ch=$('chain');ch.innerHTML='';
+  cur().stages.forEach((s,i)=>{
+    if(i){const a=document.createElement('span');a.className='arrow';a.textContent='→';ch.appendChild(a);}
+    const b=document.createElement('button');b.type='button';b.innerHTML='<b>'+(i+1)+'</b>'+s.short;b.addEventListener('click',()=>goStage(i,true));ch.appendChild(b);
+  });
+}
+function markChain(){
+  const bs=$('chain').querySelectorAll('button');bs.forEach((b,i)=>{if(i===state.stage){b.setAttribute('aria-current','step');}else b.removeAttribute('aria-current');});
+  const cb=bs[state.stage];if(cb){const ch=$('chain');const l=cb.offsetLeft-ch.offsetLeft,r=l+cb.offsetWidth;
+    if(l<ch.scrollLeft||r>ch.scrollLeft+ch.clientWidth)ch.scrollTo({left:l-40,behavior:reduceMotion?'auto':'smooth'});}
+  lblEls.forEach((o,i)=>o.el.classList.toggle('on',!o.deco&&i===state.stage));
+}
+function goStage(i,manual){
+  const n=cur().stages.length;i=(i+n)%n;
+  if(manual){state.playing=false;$('bPlay').textContent='Oynat';state.phase='dwell';state.tp=0;}
+  if(i===0&&state.mode==='D'&&!manual)newEvent();
+  state.stage=i;markChain();renderCaption(true);
+}
+$('bPrev').addEventListener('click',e=>{e.stopPropagation();goStage(state.stage-1,true);});
+$('bNext').addEventListener('click',e=>{e.stopPropagation();goStage(state.stage+1,true);});
+$('bPlay').addEventListener('click',e=>{e.stopPropagation();state.playing=!state.playing;$('bPlay').textContent=state.playing?'Duraklat':'Oynat';state.tp=0;state.phase='dwell';});
+['bPrev','bNext','bPlay'].forEach(id=>$(id).addEventListener('pointerdown',e=>e.stopPropagation()));
+
+function setMode(m){
+  state.mode=m;$('mD').setAttribute('aria-pressed',String(m==='D'));$('mP').setAttribute('aria-pressed',String(m==='P'));
+  gD.visible=m==='D';gP.visible=m==='P';$('ctlD').hidden=m!=='D';$('ctlP').hidden=m!=='P';
+  state.stage=0;state.phase='dwell';state.tp=0;
+  buildChain();buildLabels();markChain();sync();
+  try{history.replaceState(null,'',m==='D'?'#darbe':'#pikoampermetre');}catch(e){}
+}
+$('mD').addEventListener('click',()=>setMode('D'));$('mP').addEventListener('click',()=>setMode('P'));
+
+/* =====================================================================
+   ANİMASYON DÖNGÜSÜ
+   ===================================================================== */
+const tmpV=V3(0,0,0),tmpW=V3(0,0,0);
+function stagePoint(k,out){ // paketin bekleme noktası
+  const st=cur().stages[k];
+  if(k===0){if(state.mode==='D')return out.set(GEMX,gemLevels.pad+0.15,0);return out.set(SRCX,0.95,0);}
+  const sg=cur().segs[k-1];return out.copy(sg.pts[sg.pts.length-1]).setY(0.35);
+}
+function resize(){
+  const w=viz.clientWidth,h=viz.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  viz.classList.toggle('compact',w<620);
+}
+new ResizeObserver(resize).observe(viz);
+let lastT=performance.now(),tftT=0,clock=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  let dt=Math.min(0.1,(now-lastT)/1000);lastT=now;clock+=dt;
+  // benzetimler her iki modda da arka planda
+  accumulate(dt);simP(dt);
+  // aşama ilerlemesi
+  if(state.playing){
+    state.tp+=dt;
+    if(state.phase==='dwell'&&state.tp>state.dwell){state.phase='travel';state.tp=0;}
+    else if(state.phase==='travel'&&state.tp>state.travel){state.phase='dwell';state.tp=0;goStage(state.stage+1,false);}
+  }else if(state.phase==='dwell'){state.tp+=dt;}
+  const stages=cur().stages,segs=cur().segs;
+  // paket
+  const n=stages.length;
+  if(state.phase==='travel'&&state.stage<n-1){
+    const sg=segs[state.stage];const u=clamp(state.tp/state.travel,0,1);const e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+    pkS.forEach((s,i)=>{posOnSeg(sg,clamp(e-i*0.035,0,1),s.position);s.position.y+=0.25;s.visible=true;});
+  }else if(state.phase==='travel'){ // son aşamadan başa dönüş: paket gizli
+    pkS.forEach(s=>s.visible=false);
+  }else{
+    stagePoint(state.stage,tmpV);
+    const pul=1+0.12*Math.sin(clock*6);
+    pkS.forEach((s,i)=>{s.position.copy(tmpV);s.visible=i===0;s.scale.setScalar(0.95*pul);});
+  }
+  pLight.position.copy(pkS[0].position);
+    // pad parıltıları
+  stages.forEach((s,i)=>{const on=i===state.stage;const tgt=on?0.42+0.12*Math.sin(clock*3.2):0.0;s.padMesh.material.opacity+=(tgt-s.padMesh.material.opacity)*Math.min(1,dt*6);});
+  // D: GEM animasyonu
+  if(state.mode==='D')animGem(dt);
+  else animP(dt);
+  // kamera
+  stagePoint(state.stage,tmpW);
+  cam.want.set(-2.6,0.4,0).lerp(tmpW,0.18);cam.tgt.lerp(cam.want,Math.min(1,dt*1.6));
+  if(!reduceMotion&&now-userCamT>4000)cam.th+=Math.sin(clock*0.12)*0.0009;
+  const rr=cam.r*(camera.aspect<1?1.45:camera.aspect<1.35?1.15:1);
+  camera.position.set(cam.tgt.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),cam.tgt.y+rr*Math.cos(cam.ph),cam.tgt.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));
+  camera.lookAt(cam.tgt);
+  renderer.render(scene,camera);
+  // etiketler
+  const w=viz.clientWidth,h=viz.clientHeight;
+  lblEls.forEach(o=>{tmpV.copy(o.p).project(camera);const vis=tmpV.z<1&&tmpV.x>-1.2&&tmpV.x<1.2&&tmpV.y>-1.2&&tmpV.y<1.3;
+    o.el.style.display=vis?'':'none';if(vis)o.el.style.transform='translate('+((tmpV.x*0.5+0.5)*w).toFixed(1)+'px,'+((-tmpV.y*0.5+0.5)*h-10).toFixed(1)+'px) translate(-50%,-100%)';});
+  // osiloskop
+  if(state.mode==='D'){const rev=state.stage===9?1:clamp((state.phase==='dwell'?state.tp:state.dwell)/1.1,0,1);drawScope(scopeSpecD(state.stage,rev));}
+  else drawScope(scopeSpecP(state.stage));
+  $('scopeTag').textContent=state.mode==='D'?'tetik: darbe':'şerit kayıt';
+  // TFT ~12 fps
+  tftT+=dt;if(tftT>0.08){tftT=0;state.mode==='D'?drawTftD():drawTftP();tftTex.needsUpdate=true;}
+  renderCaption(false);
+  $('livetxt').textContent=state.mode==='D'?('canlı · '+grp(D.rateEst)+' sayım/s'):('canlı · '+(P.over?'aralık dışı':si(P.Iavg,'A',4)));
+}
+function animGem(dt){
+  const t=state.stage===0&&state.phase==='dwell'?state.tp:(state.stage===0?state.dwell:99);
+  const s=D.ev.src;const isA=D.src==='alfa',isT=D.src==='test';
+  // foton
+  const pa=photon.geometry.attributes.position.array;
+  const conv=V3(0.3,2.8,0.2);
+  if(!isA&&!isT&&t<0.35){const u=t/0.35;const st=V3(0.9,4.3,0.4);const p=st.clone().lerp(conv,u);
+    pa[0]=st.x;pa[1]=st.y;pa[2]=st.z;pa[3]=p.x;pa[4]=p.y;pa[5]=p.z;photon.material.opacity=0.9;photon.geometry.attributes.position.needsUpdate=true;}
+  else photon.material.opacity=Math.max(0,photon.material.opacity-dt*3);
+  alphaTrack.material.opacity=isA&&t<1.2?0.85*(1-t/1.2):0;
+  const L=gemLevels;
+  const y0=isA?2.75:conv.y;
+  const t0=isA?0.05:0.35,t1=2.2;
+  const u=clamp((t-t0)/(t1-t0),0,1);
+  const front=y0-(y0-L.pad-0.08)*u;
+  const lvl=isA?0:(front>L.f1?0:front>L.f2?1:front>L.f3?2:3);
+  const maxShow=isA?160:isT?0:[12,40,130,500][lvl];
+  for(let i=0;i<NE;i++){
+    const e=eData[i];const vis=t>=t0&&t<t1+0.4&&i<maxShow&&(isA||e.lvl<=lvl);
+    if(!vis){ePos[i*3+1]=-50;continue;}
+    const spread=isA?0.15:0.08+0.18*Math.min(lvl,e.lvl+0.5);
+    let x=conv.x+e.ox*spread,z=conv.z+e.oz*spread,y=front+(e.j-0.5)*0.12;
+    if(isA){x=-1.2+e.j*2.4;z=e.oz*0.1;y=2.75-(2.75-L.pad-0.08)*clamp(u*1.2-e.ox*0.03,0,1);}
+    if(t>t1){y=L.pad+0.1;}
+    ePos[i*3]=x;ePos[i*3+1]=y;ePos[i*3+2]=z;
+  }
+  eGeo.attributes.position.needsUpdate=true;
+  padGlow.material.opacity=t>t1-0.2&&t<t1+0.8?0.6*(1-Math.abs(t-t1-0.2)/0.8):0;
+}
+function animP(dt){
+  const lv=clamp((Math.log10(Math.max(P.I,1e-15))+15)/12,0,1);
+  pdG.visible=P.kind==='pd';icG.visible=P.kind==='ic';
+  const light=clamp((Math.log10(Math.max(P.I,1e-15))+12)/6.3,0,1);
+  cone.material.opacity=0.03+0.3*light;bulb.material.color.setRGB(0.25+0.75*light,0.22+0.72*light,0.18+0.6*light);
+  // iyonlar
+  const nOn=Math.round(NI*clamp(lv*1.1,0.05,1));
+  for(let i=0;i<NI;i++){const o=ions[i];
+    if(i>=nOn||P.kind!=='ic'){iPos[i*3+1]=-50;continue;}
+    o.r-=dt*o.v*(0.3+lv);if(o.r<0.07){o.r=1.25;o.a=Math.random()*6.283;o.y=0.2+Math.random()*2.8;}
+    iPos[i*3]=Math.cos(o.a)*o.r;iPos[i*3+1]=o.y;iPos[i*3+2]=Math.sin(o.a)*o.r;}
+  iGeo.attributes.position.needsUpdate=true;
+  // akım akışı: yoğunluk ve hız akımın logaritmasıyla
+  const segs=segP;let total=0;const lens=segs.map(s=>s.len);lens.forEach(l=>total+=l);
+  const nVis=Math.round(NS*(0.12+0.88*lv)),speed=0.05+0.12*lv;
+  for(let i=0;i<NS;i++){
+    if(i>=nVis){sPos[i*3+1]=-50;continue;}
+    streamU[i]=(streamU[i]+dt*speed*(0.7+0.6*((i*37)%10)/10))%1;
+    let d=streamU[i]*total,k=0;while(k<segs.length-1&&d>segs[k].len){d-=segs[k].len;k++;}
+    posOnSeg(segs[k],d/segs[k].len,tmpV);
+    sPos[i*3]=tmpV.x;sPos[i*3+1]=tmpV.y+0.12;sPos[i*3+2]=tmpV.z;
+  }
+  sGeo.attributes.position.needsUpdate=true;
+  // röle LED'leri
+  relays.forEach((r,i)=>{const on=P.r===i+1;r.userData.led.material.color.setHex(on?0x7fe0aa:0x223344);});
+}
+
+/* başlat */
+D.ev=makeEvent();
+const h0=(location.hash||'').replace('#','');
+setMode(h0==='pikoampermetre'?'P':'D');
+if(!state.playing)$('bPlay').textContent='Oynat';
+resize();
+requestAnimationFrame(t=>{lastT=t;frame(t);});
+})();
+</script>
+
+</body></html>

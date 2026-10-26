@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dozimetrenin Yolculuğu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Düzen: tek sahne — üstte başlık, ortada canlandırma paneli, altında üç adımlı açıklama. Tek (koyu) görünüm bilinçli seçildi. */
+:root{
+  --bg:#0B151D; --panel:#111F29; --line:#22343F; --fg:#EEF2F4; --muted:#9FB0BC; --soft:#B9C6CF;
+  --amber:#F2A541; --teal:#5FC4C0; --screen:#04090D; --device:#1A2B36; --device-edge:#2C4250;
+  --display:'IBM Plex Sans Condensed','IBM Plex Sans','Arial Narrow',sans-serif;
+  --body:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:40px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,5.6vw,64px);line-height:1.02;margin:8px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.lead{color:var(--soft);font-size:clamp(16px,1.8vw,19px);max-width:62ch;margin:14px 0 0}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--line)}
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer}
+.chip{font-family:var(--mono);font-size:13px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:9px 14px;min-height:40px}
+.chip[aria-current="step"]{color:var(--bg);background:var(--amber);border-color:var(--amber);font-weight:600}
+.ctrl{display:flex;gap:8px}
+.btn{font-family:var(--mono);font-size:13px;color:var(--fg);background:var(--device);border:1px solid var(--device-edge);border-radius:10px;padding:9px 14px;min-height:40px}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.explain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.explain article{min-width:0;padding:4px 0 0;border-top:2px solid var(--line);transition:border-color .3s}
+.explain article.on{border-top-color:var(--amber)}
+.explain .n{font-family:var(--mono);font-size:13px;color:var(--amber);margin-top:14px}
+.explain h2{font-family:var(--display);font-size:24px;line-height:1.15;margin:6px 0 8px}
+.explain p{margin:0;color:var(--soft);font-size:15.5px}
+.note{font-family:var(--mono);font-size:12.5px;color:var(--muted);line-height:1.6;max-width:90ch}
+@media (max-width:760px){.explain{grid-template-columns:minmax(0,1fr)}}
+svg text{font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">RDR-1 · Nasıl çalışır</div>
+    <h1>Bir dozimetrenin yolculuğu</h1>
+    <p class="lead">Sensör önce okuyucuda ölçülür, sonra doktorun yakasında bir ay boyunca radyasyonu biriktirir. Okuyucuya geri döndüğünde eşik gerilimindeki kayma doz değerine çevrilir.</p>
+  </header>
+
+  <section class="stage" aria-label="Canlandırma">
+    <svg id="scene" viewBox="0 0 1200 640" role="img" aria-label="NürFET sensörü okuyucuda ölçülüyor, doktorun yakasında radyasyona maruz kalıyor ve geri dönüp tekrar okunuyor; ekranda doz değeri görünüyor.">
+      <defs>
+        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#F2A541" stop-opacity=".9"/>
+          <stop offset="100%" stop-color="#F2A541" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M40 0H0V40" fill="none" stroke="#16262F" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="1200" height="640" fill="url(#grid)"/>
+
+      <!-- Floroskopi odası -->
+      <g id="room">
+        <text x="650" y="60" text-anchor="middle" font-size="13" fill="#6F8593" letter-spacing="2">FLOROSKOPİ ODASI</text>
+        <path d="M600 112 A190 190 0 0 0 600 492" fill="none" stroke="#2C4250" stroke-width="22" stroke-linecap="round"/>
+        <rect x="590" y="100" width="120" height="26" rx="6" fill="#2C4250"/>
+        <rect x="620" y="478" width="60" height="38" rx="6" fill="#2C4250"/>
+        <polygon id="beam" points="635,478 665,478 702,126 598,126" fill="#F2A541" opacity="0"/>
+        <rect x="505" y="440" width="300" height="12" rx="4" fill="#3A5260"/>
+        <rect x="520" y="412" width="230" height="28" rx="14" fill="#55707E"/>
+        <circle cx="770" cy="420" r="20" fill="#55707E"/>
+        <rect x="560" y="452" width="10" height="150" fill="#22343F"/>
+        <rect x="740" y="452" width="10" height="150" fill="#22343F"/>
+        <text id="scatterLbl" x="520" y="396" font-size="13" fill="#F2A541" opacity="0">saçılan radyasyon →</text>
+      </g>
+      <!-- Doktor -->
+      <g id="doctor">
+        <rect x="812" y="300" width="44" height="250" rx="22" fill="#DCE4E8"/>
+        <rect x="1064" y="300" width="44" height="250" rx="22" fill="#DCE4E8"/>
+        <path d="M842 640 L850 330 Q856 272 912 256 L960 282 L1008 256 Q1064 272 1070 330 L1078 640 Z" fill="#E8EEF1"/>
+        <path d="M914 258 L960 336 L1006 258 Z" fill="#2F7F86"/>
+        <path d="M912 256 L938 392" stroke="#C3CED4" stroke-width="3" fill="none"/>
+        <path d="M1008 256 L982 392" stroke="#C3CED4" stroke-width="3" fill="none"/>
+        <rect x="995" y="420" width="46" height="8" rx="3" fill="#C3CED4"/>
+        <rect x="944" y="212" width="32" height="50" rx="10" fill="#C99878"/>
+        <circle cx="960" cy="176" r="48" fill="#D3A585"/>
+        <path d="M912 172 Q914 118 962 118 Q1010 118 1010 170 Q996 146 962 144 Q928 146 912 172 Z" fill="#2B2420"/>
+        <text x="960" y="626" text-anchor="middle" font-size="13" fill="#6F8593" letter-spacing="2">GİRİŞİMSEL KARDİYOLOG</text>
+      </g>
+
+      <g id="particles"></g>
+
+      <!-- Biriken doz göstergesi -->
+      <g id="exposureHud" opacity="0">
+        <rect x="872" y="40" width="300" height="78" rx="12" fill="#0B151D" stroke="#2C4250"/>
+        <text x="890" y="66" font-size="13" fill="#9FB0BC">GÜN</text>
+        <text id="dayTxt" x="890" y="100" font-size="30" fill="#EEF2F4" font-weight="600">1 / 30</text>
+        <text x="1154" y="66" font-size="13" fill="#9FB0BC" text-anchor="end">SENSÖRDE BİRİKEN</text>
+        <text id="accTxt" x="1154" y="100" font-size="30" fill="#F2A541" font-weight="600" text-anchor="end">0 mGy</text>
+      </g>
+
+      <!-- Sensör kartı (badge) -->
+      <g id="badge">
+        <circle id="badgeGlow" cx="0" cy="0" r="70" fill="url(#glow)" opacity="0"/>
+        <rect x="-12" y="-62" width="24" height="18" rx="4" fill="#9FB0BC"/>
+        <rect x="-36" y="-48" width="72" height="98" rx="10" fill="#F4F6F7" stroke="#C3CED4" stroke-width="2"/>
+        <rect x="-22" y="-26" width="44" height="40" rx="3" fill="#1C1F22"/>
+        <g fill="#B8C2C8">
+          <rect x="-28" y="-22" width="6" height="4"/><rect x="-28" y="-12" width="6" height="4"/><rect x="-28" y="-2" width="6" height="4"/><rect x="-28" y="8" width="6" height="4"/>
+          <rect x="22" y="-22" width="6" height="4"/><rect x="22" y="-12" width="6" height="4"/><rect x="22" y="-2" width="6" height="4"/><rect x="22" y="8" width="6" height="4"/>
+        </g>
+        <circle cx="-14" cy="-19" r="2.5" fill="#55707E"/>
+        <text x="0" y="-38" text-anchor="middle" font-size="9" fill="#2C4250" font-weight="600">NürFET</text>
+        <text x="0" y="36" text-anchor="middle" font-size="11" fill="#2C4250" font-weight="600">S-03</text>
+      </g>
+
+      <!-- RDR-1 okuyucu -->
+      <g id="reader">
+        <rect x="80" y="232" width="380" height="336" rx="38" fill="#1A2B36" stroke="#2C4250" stroke-width="2"/>
+        <rect x="226" y="226" width="88" height="12" rx="4" fill="#04090D"/>
+        <rect x="110" y="266" width="252" height="270" rx="14" fill="#04090D" stroke="#2C4250" stroke-width="2"/>
+        <text x="126" y="296" font-size="15" fill="#F2A541">SENSÖR 03</text>
+        <text x="346" y="296" font-size="15" fill="#F2A541" text-anchor="end">30 µA</text>
+        <line x1="126" y1="310" x2="346" y2="310" stroke="#22343F"/>
+        <text x="126" y="342" font-size="17" fill="#CFE3EA">Vth ön</text>
+        <text id="vPre" x="346" y="342" font-size="17" fill="#CFE3EA" text-anchor="end">—.———— V</text>
+        <text x="126" y="372" font-size="17" fill="#CFE3EA">Vth son</text>
+        <text id="vPost" x="346" y="372" font-size="17" fill="#CFE3EA" text-anchor="end">—.———— V</text>
+        <text x="126" y="402" font-size="17" fill="#CFE3EA">ΔVth</text>
+        <text id="vDelta" x="346" y="402" font-size="17" fill="#CFE3EA" text-anchor="end">—.—— mV</text>
+        <line x1="126" y1="418" x2="346" y2="418" stroke="#22343F"/>
+        <text x="126" y="446" font-size="15" fill="#9FB0BC">DOZ</text>
+        <text id="vDose" x="346" y="488" font-size="38" fill="#FFFFFF" font-weight="600" text-anchor="end">—— mGy</text>
+        <rect x="126" y="504" width="220" height="4" rx="2" fill="#16262F"/>
+        <rect id="prog" x="126" y="504" width="0" height="4" rx="2" fill="#5FC4C0"/>
+        <text id="status" x="236" y="527" font-size="12" fill="#5FC4C0" text-anchor="middle" letter-spacing="1">SENSÖR TAKILI</text>
+        <circle cx="412" cy="300" r="22" fill="none" stroke="#F2A541" stroke-width="3"/>
+        <circle cx="412" cy="370" r="16" fill="#2C4250"/>
+        <circle cx="412" cy="420" r="16" fill="#2C4250"/>
+        <circle cx="412" cy="470" r="16" fill="#2C4250"/>
+        <text x="270" y="556" font-size="13" fill="#6F8593" text-anchor="middle" letter-spacing="3">RDR-1</text>
+      </g>
+
+      <!-- Ölçüm vurgusu -->
+      <circle id="ping" cx="270" cy="210" r="40" fill="none" stroke="#5FC4C0" stroke-width="2" opacity="0"/>
+    </svg>
+    <div class="bar">
+      <div class="steps" role="group" aria-label="Adımlar">
+        <button class="chip" type="button" id="s1">1 · Ön okuma</button>
+        <button class="chip" type="button" id="s2">2 · Maruz kalma</button>
+        <button class="chip" type="button" id="s3">3 · Son okuma ve doz</button>
+      </div>
+      <div class="ctrl">
+        <button class="btn" type="button" id="play">Duraklat</button>
+        <button class="btn" type="button" id="restart">Baştan</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="explain" aria-label="Adımların açıklaması">
+    <article id="e1">
+      <div class="n">ADIM 1</div>
+      <h2>Ön okuma</h2>
+      <p>Sensör okuyucuya takılır. Cihaz sabit akım uygular ve transistörün eşik gerilimini ölçer. Bu başlangıç değeri sensör numarasıyla birlikte kaydedilir.</p>
+    </article>
+    <article id="e2">
+      <div class="n">ADIM 2</div>
+      <h2>Maruz kalma</h2>
+      <p>Sensör yakaya takılır ve pilsiz çalışır. Hastadan saçılan radyasyon, transistörün oksit katmanında kalıcı yük biriktirir. Biriken yük doz ile orantılıdır.</p>
+    </article>
+    <article id="e3">
+      <div class="n">ADIM 3</div>
+      <h2>Son okuma ve doz</h2>
+      <p>Sensör tekrar okunur. Eşik gerilimindeki kayma (ΔVth), sensörün kalibrasyon katsayısıyla doza çevrilir ve ekranda gösterilir.</p>
+    </article>
+  </section>
+
+  <p class="note">Ekrandaki değerler örnektir. Doz, NürFET için kullanılan doğrusal yaklaşık duyarlılıkla (0,024 V/Gy) hesaplanmıştır: 1,01 mV ÷ 0,024 V/Gy ≈ 42 mGy. Gerçek ölçümde sensöre özgü kalibrasyon ve sıcaklık düzeltmesi uygulanır.</p>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  const LOOP = 23000;
+  const T = {preRead:1400, out:4400, onCollar:6400, expEnd:13400, inReader:15600, postRead:16900, doseEnd:18300};
+  const IN_READER = {x:270, y:226, s:1};
+  const ON_COLLAR = {x:905, y:302, s:.62};
+  const CTRL = {x:600, y:-60};
+  const V_PRE = 2.4316, D_MGY = 42, SENS = 0.024; // V/Gy
+  const V_DELTA = D_MGY/1000*SENS*1000; // mV
+  const V_POST = V_PRE + V_DELTA/1000;
+
+  // Parçacık havuzu
+  const N = 46, PERIOD = 1100, parts = [];
+  for (let i=0;i<N;i++){ const c=document.createElementNS(NS,'circle'); c.setAttribute('r','3'); c.setAttribute('fill','#F2A541'); c.setAttribute('opacity','0'); $('particles').appendChild(c); parts.push(c); }
+  const hash = n => { const x = Math.sin(n*12.9898)*43758.5453; return x - Math.floor(x); };
+
+  const ease = u => u<.5 ? 4*u*u*u : 1 - Math.pow(-2*u+2,3)/2;
+  const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+  const lerp = (a,b,u) => a+(b-a)*u;
+  function bez(p0,p1,p2,u){ return {x:(1-u)*(1-u)*p0.x+2*(1-u)*u*p1.x+u*u*p2.x, y:(1-u)*(1-u)*p0.y+2*(1-u)*u*p1.y+u*u*p2.y}; }
+  const fmtV = v => v.toFixed(4).replace('.',',') + ' V';
+
+  function render(t){
+    // Sensör konumu
+    let pos, s, rot=0;
+    if (t < T.out) { pos = IN_READER; s = 1; }
+    else if (t < T.onCollar) { const u = ease((t-T.out)/(T.onCollar-T.out)); pos = bez(IN_READER,CTRL,ON_COLLAR,u); s = lerp(1,ON_COLLAR.s,u); rot = Math.sin(u*Math.PI)*-14; }
+    else if (t < T.expEnd) { pos = ON_COLLAR; s = ON_COLLAR.s; }
+    else if (t < T.inReader - 200) { const u = ease((t-T.expEnd)/(T.inReader-200-T.expEnd)); pos = bez(ON_COLLAR,CTRL,IN_READER,u); s = lerp(ON_COLLAR.s,1,u); rot = Math.sin(u*Math.PI)*14; }
+    else { pos = IN_READER; s = 1; }
+    $('badge').setAttribute('transform', `translate(${pos.x} ${pos.y}) rotate(${rot}) scale(${s})`);
+
+    // Maruz kalma
+    const exp = t >= T.onCollar && t < T.expEnd;
+    const eu = clamp((t-T.onCollar)/(T.expEnd-T.onCollar),0,1);
+    const accum = t < T.onCollar ? 0 : eu;
+    $('badgeGlow').setAttribute('opacity', (t>=T.onCollar && t<T.inReader ? .15 + .55*accum : 0).toFixed(2));
+    $('beam').setAttribute('opacity', exp ? (.10 + .05*Math.sin(t/120)).toFixed(3) : 0);
+    $('scatterLbl').setAttribute('opacity', exp ? 1 : 0);
+    $('exposureHud').setAttribute('opacity', (t>=T.onCollar-300 && t<T.inReader) ? 1 : 0);
+    $('dayTxt').textContent = Math.max(1, Math.ceil(eu*30)) + ' / 30';
+    $('accTxt').textContent = Math.round(eu*D_MGY) + ' mGy';
+    for (let i=0;i<N;i++){
+      const c = parts[i];
+      if (!exp){ c.setAttribute('opacity','0'); continue; }
+      const local = t - T.onCollar + i*PERIOD/N;
+      const cyc = Math.floor(local/PERIOD), age = (local % PERIOD)/PERIOD;
+      const h1 = hash(i*31+cyc*7), h2 = hash(i*17+cyc*13+1), h3 = hash(i*5+cyc*3+2);
+      const sx = 600 + h1*120, sy = 404 + h2*20;
+      let ex, ey;
+      if (h3 < .35){ ex = ON_COLLAR.x + (h1-.5)*30; ey = ON_COLLAR.y + (h2-.5)*30; }
+      else if (h3 < .8){ ex = 860 + h1*200; ey = 260 + h2*300; }
+      else { ex = 540 + h1*260; ey = 160 + h2*120; }
+      c.setAttribute('cx', lerp(sx,ex,age).toFixed(1));
+      c.setAttribute('cy', lerp(sy,ey,age).toFixed(1));
+      c.setAttribute('r', (h3<.35 ? 3.4 : 2.4));
+      c.setAttribute('opacity', (Math.sin(age*Math.PI)*.95).toFixed(2));
+    }
+
+    // Okuyucu ekranı
+    let status, prog = 0;
+    if (t < T.preRead){ status='ÖLÇÜLÜYOR · ÖN DEĞER'; prog = t/T.preRead; }
+    else if (t < T.out){ status='ÖN DEĞER KAYDEDİLDİ'; prog = 1; }
+    else if (t < T.inReader){ status='SENSÖR YOK · SAHADA'; }
+    else if (t < T.postRead){ status='ÖLÇÜLÜYOR · SON DEĞER'; prog = (t-T.inReader)/(T.postRead-T.inReader); }
+    else { status='DOZ HESAPLANDI'; prog = 1; }
+    $('status').textContent = status;
+    $('prog').setAttribute('width', (220*clamp(prog,0,1)).toFixed(1));
+    $('vPre').textContent = t >= T.preRead ? fmtV(V_PRE) : '—.———— V';
+    $('vPost').textContent = t >= T.postRead ? fmtV(V_POST) : '—.———— V';
+    $('vDelta').textContent = t >= T.postRead ? '+' + V_DELTA.toFixed(2).replace('.',',') + ' mV' : '—.—— mV';
+    const du = clamp((t-T.postRead)/(T.doseEnd-T.postRead),0,1);
+    $('vDose').textContent = t >= T.postRead ? Math.round(ease(du)*D_MGY) + ' mGy' : '—— mGy';
+    $('vDose').setAttribute('fill', t >= T.doseEnd ? '#F2A541' : '#FFFFFF');
+
+    // Ölçüm halkası
+    const measuring = t < T.preRead || (t >= T.inReader && t < T.postRead);
+    const pu = (t % 900)/900;
+    $('ping').setAttribute('r', (36 + pu*40).toFixed(1));
+    $('ping').setAttribute('opacity', measuring ? (.8*(1-pu)).toFixed(2) : 0);
+
+    // Adımlar
+    const step = t < T.out ? 1 : (t < T.inReader ? 2 : 3);
+    for (const k of [1,2,3]){
+      const b = $('s'+k), e = $('e'+k);
+      if (k===step){ b.setAttribute('aria-current','step'); e.classList.add('on'); }
+      else { b.removeAttribute('aria-current'); e.classList.remove('on'); }
+    }
+  }
+
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let t = reduce ? T.doseEnd + 100 : 0, playing = !reduce, last = null;
+  function setPlaying(p){ playing = p; $('play').textContent = p ? 'Duraklat' : 'Oynat'; last = null; }
+  function frame(now){
+    if (playing){ if (last !== null) t = (t + (now-last)) % LOOP; last = now; }
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  $('play').addEventListener('click', () => setPlaying(!playing));
+  $('restart').addEventListener('click', () => { t = 0; setPlaying(true); });
+  $('s1').addEventListener('click', () => { t = 0; last = null; });
+  $('s2').addEventListener('click', () => { t = T.out; last = null; });
+  $('s3').addEventListener('click', () => { t = T.inReader; last = null; });
+  setPlaying(playing);
+  render(t);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
