@@ -527,7 +527,7 @@ const T = {
     demos_h:"Etkileşimli modeller", projlist_h:"Proje görevleri",
     open_demo:"Modeli aç", demo_tab:"Yeni sekmede", demo_note:"3B modeller için WebGL destekli güncel bir masaüstü tarayıcı önerilir. GEM modellerinin arayüzü İngilizcedir.",
     pi:"Yürütücü", researcher:"Araştırmacı", r_all:"Tümü",
-    see_demos:"İlgili etkileşimli modeller ↑",
+    see_demos:"İlgili etkileşimli modeller ↑", see_tf:"Takım sayfası: TEKNOFEST →", tf_project:"Proje desteği",
     courses_eyebrow:"Lisans programı", courses_h:"Dersler",
     courses_lede:"Elektrik-Elektronik Mühendisliği lisans programında verdiğim dersler.",
     courses_current:"Verilen dersler", c_name:"Ders", c_term:"Dönem", c_hours:"Saat", c_lang:"Dil", c_year:"Yıl",
@@ -587,7 +587,7 @@ const T = {
     demos_h:"Interactive models", projlist_h:"Project roles",
     open_demo:"Open model", demo_tab:"New tab", demo_note:"The 3D models are best viewed in a current desktop browser with WebGL. The RDR-1 and LCPA-1 models are in Turkish.",
     pi:"Principal investigator", researcher:"Researcher", r_all:"All",
-    see_demos:"Related interactive models ↑",
+    see_demos:"Related interactive models ↑", see_tf:"Team page: TEKNOFEST →", tf_project:"Project funding",
     courses_eyebrow:"Undergraduate programme", courses_h:"Teaching",
     courses_lede:"Courses I teach in the Electrical and Electronics Engineering undergraduate programme.",
     courses_current:"Courses", c_name:"Course", c_term:"Term", c_hours:"Hours", c_lang:"Language", c_year:"Year",
@@ -804,6 +804,7 @@ const TEKNOFEST = [
    badge:{tr:"TEKNOFEST 2026 · Mavi Vatan finalisti", en:"TEKNOFEST 2026 · Mavi Vatan finalist"},
    comp:{tr:"İnsansız Deniz Aracı (İDA) Yarışması", en:"Unmanned Surface Vehicle (İDA) Competition"},
    univ:{tr:"Bolu Abant İzzet Baysal Üniversitesi", en:"Bolu Abant İzzet Baysal University"},
+   project:{tr:"BAP projesi, 2026–2027 (yürütücü: Doç. Dr. Rıfkı Terzioğlu)", en:"BAP research project, 2026–2027 (PI: Assoc. Prof. Rıfkı Terzioğlu)"},
    tr:"Girdap, otonom bir insansız deniz aracı geliştiren öğrenci takımıdır. Takım, Ağustos 2026’da Gölcük Tersanesi Komutanlığı’nda düzenlenen TEKNOFEST Mavi Vatan İDA yarışmasında finalist olarak jüri karşısına çıktı. Yarışmada araçlar engellerden otonom olarak kaçınarak önceden bildirilen renkteki hedefe yönelmek ve ona temas etmek zorundadır.",
    en:"Girdap is a student team building an autonomous unmanned surface vehicle. In August 2026 the team competed as a finalist in the TEKNOFEST Mavi Vatan İDA competition at the Gölcük Naval Shipyard Command. Vehicles must avoid obstacles autonomously, head for a target of a colour announced beforehand and make contact with it.",
    specs:[
@@ -825,6 +826,12 @@ const SCHOLAR = {total:360, h:10, i10:11, byYear:{2015:2,2016:2,2017:4,2018:8,20
 
 /* Projeler: role = "pi" (yürütücü) veya "res" (araştırmacı); end boşsa devam ediyor */
 const PROJECTS = [
+  {role:"pi",start:"2026",end:"",fund:{tr:"BAP",en:"University research fund (BAP)"},link:"teknofest",
+   tr:"Otonom görev icrası yapabilen insansız deniz aracı (İDA) tasarımı, yazılım mimarisi ve prototip geliştirilmesi: Girdap İDA",
+   en:"Design, software architecture and prototype of an unmanned surface vehicle for autonomous missions: Girdap İDA"},
+  {role:"res",start:"2026",end:"",fund:{tr:"TÜSEB B Grubu Ar-Ge",en:"TÜSEB Group B R&D"},
+   tr:"Fiberoptik basınç sensörlü akıllı Foley kateter",
+   en:"Smart Foley catheter with a fibre-optic pressure sensor"},
   {role:"pi",start:"2025",end:"",fund:{tr:"TÜBİTAK 3501",en:"TÜBİTAK 3501"},
    tr:"Nükleer tıp uygulamalarına yönelik yerli ve özgün doz kalibratörü tasarımı ve üretimi",
    en:"Design and production of an indigenous dose calibrator for nuclear medicine applications"},
@@ -834,6 +841,9 @@ const PROJECTS = [
   {role:"res",start:"2025",end:"",fund:{tr:"TÜBİTAK",en:"TÜBİTAK"},
    tr:"Ga₂O₃ dayalı fotodiyotlar ve sintilatör kombinasyonunu kullanarak iyonize radyasyon tespiti için yeni bir modül geliştirme",
    en:"A new module for ionising-radiation detection combining Ga₂O₃-based photodiodes with scintillators"},
+  {role:"res",start:"2025",end:"2025",fund:{tr:"TÜBİTAK 1002",en:"TÜBİTAK 1002"},demo:true,
+   tr:"Yerli NürFET dozimetrelerinin saha uygulamaları için taşınabilir okuyucu cihaz prototiplerinin geliştirilmesi",
+   en:"Portable reader prototypes for field use of domestic NürFET dosimeters"},
   {role:"res",start:"2023",end:"2025",fund:{tr:"TÜBİTAK 1005",en:"TÜBİTAK 1005"},
    tr:"Yeni çift katman geçit dielektrikli alan etkili transistör formundaki iyonize radyasyon dozimetrelerinin üretilerek milli teknolojilere kazandırılması",
    en:"Field-effect-transistor ionising-radiation dosimeters with a novel dual-layer gate dielectric for national technology"},
@@ -1119,6 +1129,7 @@ function renderProjects(){
       <span>${esc(p.fund[lang])}</span><span class="d">${p.start}${p.end?" – "+p.end:" –"}</span>
       <span class="status ${p.end?"":"on"}">${p.end?L("done"):L("ongoing")}</span></div>
     ${p.demo?`<a class="link" href="#projeler" data-scroll-demos>${L("see_demos")}</a>`:""}
+    ${p.link?`<a class="link" href="#${p.link}" data-view="${p.link}">${L("see_tf")}</a>`:""}
   </div>`).join("");
 }
 
@@ -1135,7 +1146,8 @@ function renderTF(){
         <dl class="kv"><dt>${L("tf_comp")}</dt><dd>${esc(t.comp[lang])}</dd>
           <dt>${L("tf_captain")}</dt><dd>${esc(t.captain)}</dd>
           <dt>${L("tf_advisor")}</dt><dd>${esc(t.advisor)}</dd>
-          <dt>${L("tf_univ")}</dt><dd>${esc(t.univ[lang])}</dd></dl>
+          <dt>${L("tf_univ")}</dt><dd>${esc(t.univ[lang])}</dd>
+          ${t.project?`<dt>${L("tf_project")}</dt><dd>${esc(t.project[lang])}</dd>`:""}</dl>
         ${t.photo?"":`<p class="muted">${L("tf_photo_soon")}</p>`}
       </div>
     </div>
