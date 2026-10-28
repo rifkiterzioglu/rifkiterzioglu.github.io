@@ -149,15 +149,38 @@ section.block>h3{font-size:var(--s2);padding-bottom:8px;border-bottom:1px solid 
   .charts{position:static;order:-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 }
 
+/* ---------- media ---------- */
+.socials{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.social{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--surface);text-decoration:none;color:var(--ink)}
+.social:hover{border-color:var(--accent)}
+.social b{font-weight:600}
+.social span{color:var(--muted);font-size:.86rem}
+.social i{position:absolute;right:14px;top:12px;font-style:normal;color:var(--accent)}
+.press{display:flex;flex-direction:column}
+.pitem{display:grid;grid-template-columns:130px minmax(0,1fr);gap:16px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.pdate{font:400 .82rem/1.5 var(--f-mono);color:var(--muted);padding-top:2px}
+.pbody{display:flex;flex-direction:column;gap:6px;min-width:0}
+.psrc{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.ptitle{font:500 1.08rem/1.35 var(--f-display);color:var(--ink);text-decoration:none}
+.ptitle:hover{color:var(--accent);text-decoration:underline}
+.pbody p{color:var(--muted);font-size:.9rem;line-height:1.5}
+.palso{font-size:.82rem;color:var(--muted)}
+@media (max-width:520px){ .pitem{grid-template-columns:minmax(0,1fr);gap:4px} }
+
 /* ---------- TEKNOFEST ---------- */
-.tfteam{display:flex;flex-direction:column;gap:22px}
+.tfteam{display:flex;flex-direction:column;gap:18px}
+.tfdesc{color:var(--muted);font-size:.9rem;line-height:1.55}
+.tfmore summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--accent)}
+.tfmore h4{margin:14px 0 8px;font:600 .82rem/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tfmore p{font-size:.9rem;line-height:1.55}
+.tfmore .specs{grid-template-columns:minmax(0,1fr)}
 .tfhero{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
 .tfhero .pic{background:#0d2238;min-height:220px;position:relative;display:grid;place-items:center}
 .tfhero .pic img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .tfhero .pic canvas{width:100%;height:100%;position:absolute;inset:0}
 .tfhero .info{padding:20px 22px;display:flex;flex-direction:column;gap:10px}
 .tfhero h3{font-size:1.7rem}
-.badge{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:var(--copper-soft);color:var(--copper);font:600 .76rem/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:7px 10px;border-radius:6px}
+.badge{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:var(--copper-soft);color:var(--copper);font:600 .8rem/1.2 var(--f-body);letter-spacing:.01em;padding:7px 10px;border-radius:6px}
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:.9rem}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:500}
 .specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -292,6 +315,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:18px;color:
       <a href="#projeler" data-view="projeler" data-i18n="nav_projects"></a>
       <a href="#rtl" data-view="rtl" data-i18n="nav_rtl"></a>
       <a href="#teknofest" data-view="teknofest" data-i18n="nav_tf"></a>
+      <a href="#medya" data-view="medya" data-i18n="nav_media"></a>
       <a href="#dersler" data-view="dersler" data-i18n="nav_courses"></a>
     </nav>
     <div class="contact" id="contact-side"></div>
@@ -456,6 +480,24 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:18px;color:
       <div id="tfteams"></div>
     </div>
 
+    <!-- ================= MEDYA ================= -->
+    <div class="view" id="v-medya" hidden>
+      <div class="head">
+        <span class="eyebrow" data-i18n="media_eyebrow"></span>
+        <h2 data-i18n="media_h"></h2>
+        <p class="lede" data-i18n="media_lede"></p>
+      </div>
+      <section class="block">
+        <h3 data-i18n="social_h"></h3>
+        <div class="socials" id="socials"></div>
+      </section>
+      <section class="block">
+        <h3 data-i18n="press_h"></h3>
+        <div class="chips" id="mediafilters"></div>
+        <div class="press" id="press"></div>
+      </section>
+    </div>
+
     <!-- ================= DERSLER ================= -->
     <div class="view" id="v-dersler" hidden>
       <div class="head">
@@ -510,7 +552,7 @@ const ORCID_QR = '<svg class="qr" viewBox="0 0 31 31" shape-rendering="crispEdge
 const T = {
   tr:{
     role:"Doçent · Elektrik-Elektronik Mühendisliği Bölümü, Bolu Abant İzzet Baysal Üniversitesi",
-    nav_about:"Hakkımda", nav_pubs:"Yayınlar", nav_projects:"Projeler", nav_courses:"Dersler", nav_rtl:"RTL Laboratuvarı", nav_tf:"TEKNOFEST",
+    nav_about:"Hakkımda", nav_pubs:"Yayınlar", nav_projects:"Projeler", nav_courses:"Dersler", nav_rtl:"RTL Laboratuvarı", nav_tf:"TEKNOFEST", nav_media:"Medya",
     about_eyebrow:"Elektronik Anabilim Dalı", about_h:"Hakkımda",
     about_lede:"Bolu Abant İzzet Baysal Üniversitesi Mühendislik Fakültesi Elektrik-Elektronik Mühendisliği Bölümü’nde doçent olarak görev yapıyorum. Çalışmalarım nükleer radyasyon dedektörleri, MOS tabanlı radyasyon sensörleri ve süperiletken iletkenlerde alternatif akım kayıpları üzerine yoğunlaşmaktadır. Lisans, yüksek lisans ve doktora eğitimimi Sakarya Üniversitesi’nde tamamladım; doktora çalışmalarımın bir bölümünü Slovak Bilimler Akademisi Elektrik Mühendisliği Enstitüsü’nde yürüttüm.",
     f_art:"uluslararası makale", f_conf:"bildiri", f_proj:"araştırma projesi", f_thes:"yönetilen tez",
@@ -534,7 +576,10 @@ const T = {
     fall:"Güz", spring:"Bahar", elective:"Seçmeli (4. sınıf)", turkish:"Türkçe",
     notes_h:"Ders notları ve duyurular",
     notes_text:"Ders notları, ödevler ve dönem duyuruları bu bölümde yayımlanacaktır.",
-    footer_upd:"Son güncelleme: 27 Ekim 2026",
+    footer_upd:"Son güncelleme: 28 Ekim 2026",
+    media_eyebrow:"Basın ve paylaşımlar", media_h:"Yerel ve sosyal medya paylaşımları",
+    media_lede:"Projelerim, öğrenci takımlarım ve bilimsel çalışmalarımla ilgili yerel basında çıkan haberler ve sosyal medya hesaplarım.",
+    social_h:"Sosyal medya", press_h:"Basında", m_all:"Tümü", m_proj:"Projeler ve Ar-Ge", m_tf:"Öğrenci takımları", m_undated:"Tarih yok", m_also:"Ayrıca:",
     rtl_eyebrow:"Araştırma grubu · RTL",
     rtl_lede:"RTL, radyasyon dedektörlerinin okuma elektroniği üzerine çalışan bir araştırma grubudur. Dedektörden gelen küçük yük ve akım sinyallerini yükselten, sayısallaştıran ve anlamlı ölçümlere dönüştüren devreleri ve yazılımları tasarlıyor, üretiyor ve test ediyoruz.",
     rtl_focus_h:"Çalışma alanları", rtl_team_h:"Ekip", team_empty:"Ekip üyeleri yakında eklenecek.",
@@ -554,7 +599,7 @@ const T = {
     f_send:"Başvuruyu gönder", f_sending:"Gönderiliyor…", f_ok:"Başvurunuz alındı. Teşekkürler, size e-posta ile dönüş yapılacak.",
     f_err:"Başvuru gönderilemedi. Lütfen tekrar deneyin ya da doğrudan e-posta gönderin:", f_req:"Lütfen yıldızlı alanları doldurun ve onay kutusunu işaretleyin.",
     tf_eyebrow:"Öğrenci takımları", tf_h:"TEKNOFEST",
-    tf_lede:"TEKNOFEST Havacılık, Uzay ve Teknoloji Festivali yarışmalarına katılan öğrenci takımlarına akademik danışmanlık yapıyorum.",
+    tf_lede:"2020’den bu yana TEKNOFEST ve TÜBİTAK yarışmalarına katılan öğrenci takımlarına akademik danışmanlık yapıyorum: elektromobil, roket ve insansız deniz aracı.", tf_period:"Danışmanlık dönemi", tf_captains:"Kaptan", tf_more:"Ayrıntılar",
     tf_captain:"Kaptan", tf_advisor:"Akademik danışman", tf_comp:"Yarışma", tf_univ:"Üniversite",
     tf_vehicle:"Araç", tf_next:"Sıradaki hedefler", tf_news:"Basında", tf_photo_soon:"Takım fotoğrafı eklenecek",
     ov_newtab:"Yeni sekmede aç", ov_close:"Kapat ✕",
@@ -570,7 +615,7 @@ const T = {
   },
   en:{
     role:"Associate Professor · Department of Electrical and Electronics Engineering, Bolu Abant İzzet Baysal University",
-    nav_about:"About", nav_pubs:"Publications", nav_projects:"Projects", nav_courses:"Teaching", nav_rtl:"RTL Lab", nav_tf:"TEKNOFEST",
+    nav_about:"About", nav_pubs:"Publications", nav_projects:"Projects", nav_courses:"Teaching", nav_rtl:"RTL Lab", nav_tf:"TEKNOFEST", nav_media:"Media",
     about_eyebrow:"Division of Electronics", about_h:"About",
     about_lede:"I am an Associate Professor in the Department of Electrical and Electronics Engineering at Bolu Abant İzzet Baysal University. My work focuses on nuclear radiation detectors, MOS-based radiation sensors and AC losses in superconducting conductors. I received my BSc, MSc and PhD from Sakarya University, and carried out part of my doctoral research at the Institute of Electrical Engineering, Slovak Academy of Sciences.",
     f_art:"international articles", f_conf:"conference papers", f_proj:"research projects", f_thes:"supervised theses",
@@ -594,7 +639,10 @@ const T = {
     fall:"Fall", spring:"Spring", elective:"Elective (4th year)", turkish:"Turkish",
     notes_h:"Lecture notes and announcements",
     notes_text:"Lecture notes, assignments and course announcements will be posted here.",
-    footer_upd:"Last updated: 27 October 2026",
+    footer_upd:"Last updated: 28 October 2026",
+    media_eyebrow:"Press and posts", media_h:"Local and social media",
+    media_lede:"Local news coverage of my projects, student teams and scientific work, and my social media accounts.",
+    social_h:"Social media", press_h:"In the press", m_all:"All", m_proj:"Projects and R&D", m_tf:"Student teams", m_undated:"Undated", m_also:"Also:",
     rtl_eyebrow:"Research group · RTL",
     rtl_lede:"RTL is a research group working on readout electronics for radiation detectors. We design, build and test the circuits and software that amplify the small charge and current signals from a detector, digitise them and turn them into meaningful measurements.",
     rtl_focus_h:"Research areas", rtl_team_h:"Team", team_empty:"Team members will be listed here soon.",
@@ -614,7 +662,7 @@ const T = {
     f_send:"Send application", f_sending:"Sending…", f_ok:"Your application has been received. Thank you, we will reply by email.",
     f_err:"The application could not be sent. Please try again or email us directly:", f_req:"Please fill in the starred fields and tick the consent box.",
     tf_eyebrow:"Student teams", tf_h:"TEKNOFEST",
-    tf_lede:"I serve as academic advisor to student teams competing at TEKNOFEST, Türkiye’s aerospace and technology festival.",
+    tf_lede:"Since 2020 I have advised student teams competing at TEKNOFEST and TÜBİTAK events: an electric vehicle, a rocket and an unmanned surface vehicle.", tf_period:"Advisory period", tf_captains:"Captain", tf_more:"Details",
     tf_captain:"Captain", tf_advisor:"Academic advisor", tf_comp:"Competition", tf_univ:"University",
     tf_vehicle:"The vehicle", tf_next:"Next goals", tf_news:"In the news", tf_photo_soon:"Team photo coming soon",
     ov_newtab:"Open in new tab", ov_close:"Close ✕",
@@ -800,11 +848,10 @@ const RTL = {
 
 /* TEKNOFEST takımları: photo alanına takım fotoğrafının dosya adını yazın (örn. "girdap.jpg") */
 const TEKNOFEST = [
-  {name:"BAİBÜ Girdap İDA", photo:"", captain:"Emre Yiğithan Kelebek", advisor:"Doç. Dr. Rıfkı Terzioğlu",
+  {kind:"boat", name:"BAİBÜ Girdap İDA", period:"2026", photo:"", captains:"Emre Yiğithan Kelebek",
    badge:{tr:"TEKNOFEST 2026 · Mavi Vatan finalisti", en:"TEKNOFEST 2026 · Mavi Vatan finalist"},
    comp:{tr:"İnsansız Deniz Aracı (İDA) Yarışması", en:"Unmanned Surface Vehicle (İDA) Competition"},
-   univ:{tr:"Bolu Abant İzzet Baysal Üniversitesi", en:"Bolu Abant İzzet Baysal University"},
-   project:{tr:"BAP projesi, 2026–2027 (yürütücü: Doç. Dr. Rıfkı Terzioğlu)", en:"BAP research project, 2026–2027 (PI: Assoc. Prof. Rıfkı Terzioğlu)"},
+   project:{tr:"BAP projesi, 2026–2027 (yürütücü)", en:"BAP research project, 2026–2027 (PI)"},
    tr:"Girdap, otonom bir insansız deniz aracı geliştiren öğrenci takımıdır. Takım, Ağustos 2026’da Gölcük Tersanesi Komutanlığı’nda düzenlenen TEKNOFEST Mavi Vatan İDA yarışmasında finalist olarak jüri karşısına çıktı. Yarışmada araçlar engellerden otonom olarak kaçınarak önceden bildirilen renkteki hedefe yönelmek ve ona temas etmek zorundadır.",
    en:"Girdap is a student team building an autonomous unmanned surface vehicle. In August 2026 the team competed as a finalist in the TEKNOFEST Mavi Vatan İDA competition at the Gölcük Naval Shipyard Command. Vehicles must avoid obstacles autonomously, head for a target of a colour announced beforehand and make contact with it.",
    specs:[
@@ -818,7 +865,64 @@ const TEKNOFEST = [
    news:[
      {t:"TEKNOFEST Mavi Vatan’da gençlerin insansız deniz araçları jüri karşısında", src:"Milliyet Uzmanpara", url:"https://uzmanpara.milliyet.com.tr/uzmanpara/teknofest-mavi-vatanda-genclerin-insansiz-deniz-araclari-juri-karsisinda-7645772"},
      {t:"TEKNOFEST Mavi Vatan’da gençlerin insansız deniz araçları jüri karşısında", src:"Yeni Çağrı", url:"https://www.yenicagri.com/teknofest-mavi-vatanda-genclerin-insansiz-deniz-araclari-juri-karsisinda"}
+   ]},
+  {kind:"rocket", name:"BAİBÜ Volans Roket Takımı", period:"2024", photo:"", captains:"Mahmut Can Özer",
+   badge:{tr:"TEKNOFEST 2024 · Roket Yarışması", en:"TEKNOFEST 2024 · Rocket Competition"},
+   comp:{tr:"Roket Yarışması", en:"Rocket Competition"},
+   tr:"Volans, BAİBÜ öğrencilerinin kurduğu roket takımıdır. Takım, akademik danışmanlığını yaptığım 2024 sezonunda TEKNOFEST Roket Yarışması’na katıldı.",
+   en:"Volans is a student rocketry team at BAİBÜ. The team entered the TEKNOFEST Rocket Competition in the 2024 season, when I was its academic advisor.",
+   specs:[], news:[]},
+  {kind:"car", name:"BAİBÜ Ayvaz Elektromobil", period:"2020–2022", photo:"", captains:"Serhat Ekinci (2020–2021) · Mehmet Can Kara (2022)",
+   badge:{tr:"Efficiency Challenge finalisti", en:"Efficiency Challenge finalist"},
+   comp:{tr:"TÜBİTAK Efficiency Challenge Elektrikli Araç Yarışları", en:"TÜBİTAK Efficiency Challenge Electric Vehicle Races"},
+   tr:"Ayvaz, 2017’de kurulan ve TÜBİTAK Efficiency Challenge Elektrikli Araç Yarışları’nda yarışan BAİBÜ elektromobil takımıdır. Elektrik-elektronik, makine ve bilgisayar mühendisliği öğrencilerinden oluşan takım, akademik danışmanlığını yaptığım 2020–2022 sezonlarında finale kaldı. Aracın beşinci sürümü Ayvaz Neo, yeniden tasarlanan fiberglas gövdesiyle 2022’de TEKNOFEST Karadeniz’de sergilendi.",
+   en:"Ayvaz is BAİBÜ’s electric-vehicle team, founded in 2017 to race in the TÜBİTAK Efficiency Challenge. Made up of electrical-electronics, mechanical and computer engineering students, the team reached the finals in the 2020–2022 seasons when I was its academic advisor. The fifth version, Ayvaz Neo, with a redesigned fibreglass body, was exhibited at TEKNOFEST Karadeniz in 2022.",
+   specs:[], news:[
+     {t:"Bolu’nun ‘Ayvaz’ı TEKNOFEST’te sergileniyor (2022)", src:"Anadolu Ajansı · Son Dakika", url:"https://www.sondakika.com/haber/haber-bolu-abant-izzet-baysal-universitesince-ilk-kez-2017-yilinda-tasarlanan-elektrik-15233024/"},
+     {t:"Ayvaz’ın hedefi anlatıldı (2021)", src:"Bolu Takip", url:"https://www.bolutakip.com/haber/ayvazin-hedefi-anlatildi"}
    ]}
+];
+
+
+/* Medya: yeni haber eklemek için listeye bir satır ekleyin. cat: "proj" veya "tf"; date: "YYYY-AA-GG" (bilinmiyorsa "") */
+const SOCIALS = [
+  {name:"LinkedIn", who:{tr:"Kişisel profil", en:"Personal profile"}, url:"https://www.linkedin.com/in/r%C4%B1fk%C4%B1-terzio%C4%9Flu-b5864742/"},
+  {name:"LinkedIn · BAİBÜ NÜRDAM", who:{tr:"Nükleer Radyasyon Dedektörleri Merkezi", en:"Nuclear Radiation Detectors Centre"}, url:"https://www.linkedin.com/company/bai%CC%87bu-n%C3%BCrdam"}
+];
+const MEDIA = [
+  {cat:"tf", date:"2026-08-21", src:"Milliyet Uzmanpara", url:"https://uzmanpara.milliyet.com.tr/uzmanpara/teknofest-mavi-vatanda-genclerin-insansiz-deniz-araclari-juri-karsisinda-7645772",
+   also:[{src:"Yeni Çağrı", url:"https://www.yenicagri.com/teknofest-mavi-vatanda-genclerin-insansiz-deniz-araclari-juri-karsisinda"}],
+   t:"TEKNOFEST Mavi Vatan’da gençlerin insansız deniz araçları jüri karşısında",
+   n:{tr:"Girdap İDA kaptanı Emre Yiğithan Kelebek, Gölcük’teki finalde aracı anlatıyor.", en:"Girdap İDA captain Emre Yiğithan Kelebek presents the vehicle at the finals in Gölcük."}},
+  {cat:"tf", date:"2026-08-21", src:"Bolunabiz", url:"https://www.bolunabiz.com/baibunun-genc-muhendisleri-teknofest-finalinde",
+   t:"BAİBÜ’nün genç mühendisleri TEKNOFEST finalinde",
+   n:{tr:"Girdap İnsansız Deniz Aracı Takımı TEKNOFEST Mavi Vatan finalinde.", en:"The Girdap unmanned surface vehicle team in the TEKNOFEST Mavi Vatan finals."}},
+  {cat:"tf", date:"2026-08-06", src:"TV Bolu", url:"https://tvbolu.com.tr/haber/teknofest-heyecani-baibude-rektor-yigit-calismalari-yerinde-inceledi",
+   also:[{src:"Bolunun Sesi", url:"http://www.bolununsesi.com/haber/173033/teknofest-heyecani-baibude-rektor-yigit-calismalari-yerinde-inceledi"}],
+   t:"TEKNOFEST heyecanı BAİBÜ’de: Rektör Yiğit çalışmaları yerinde inceledi",
+   n:{tr:"Rektör Prof. Dr. Faruk Yiğit, TEKNOFEST 2026 takımlarını laboratuvarlarda ziyaret etti.", en:"Rector Prof. Faruk Yiğit visited the TEKNOFEST 2026 teams in their labs."}},
+  {cat:"tf", date:"2026-07-31", src:"Bolunabiz", url:"https://www.bolunabiz.com/baibu-ekibi-teknofestte-iddiasini-surduruyor",
+   t:"BAİBÜ ekibi TEKNOFEST’te iddiasını sürdürüyor",
+   n:{tr:"Girdap, otonomi kabiliyeti gösterimi aşamasını tamamladı.", en:"Girdap completed the autonomy demonstration stage."}},
+  {cat:"proj", date:"2024-12-02", src:"BAİBÜ NÜRDAM", url:"https://nrdc.ibu.edu.tr/en/news-detail/the-baibu-nurdam-project-for-r-d-activities-at-cern-received-support-from-tenmak/15478",
+   t:"BAİBÜ NÜRDAM’ın CERN Ar-Ge projesine TENMAK desteği",
+   n:{tr:"CERN DRD1 iş birliğinde yeni gaz dolu dedektörler projesi; proje ekibinde yer alıyorum.", en:"New gas-filled detectors within the CERN DRD1 collaboration; I am on the project team."}},
+  {cat:"proj", date:"2024-10-08", src:"Gerede Medya Takip", url:"https://www.geredemedyatakip.com.tr/guncel/o-cihaz-turkiyede-ilk-kez-boluda-uretilecek.html",
+   also:[{src:"BAİBÜ NÜRDAM", url:"https://nrdc.ibu.edu.tr/en/news-detail/acceptance-of-tubitak-3501-project/14954"},{src:"Bolu Ekspres", url:"http://www.boluekspres.com/icerik/haber.php?i=76728"}],
+   t:"Türkiye’nin ilk yerli doz kalibratörü Bolu’da üretilecek",
+   n:{tr:"Yürütücüsü olduğum TÜBİTAK 3501 projesi kabul edildi.", en:"The TÜBİTAK 3501 project I lead was accepted."}},
+  {cat:"tf", date:"2022-09-01", src:"Anadolu Ajansı · Son Dakika", url:"https://www.sondakika.com/haber/haber-bolu-abant-izzet-baysal-universitesince-ilk-kez-2017-yilinda-tasarlanan-elektrik-15233024/",
+   t:"Bolu’nun ‘Ayvaz’ı TEKNOFEST’te sergileniyor",
+   n:{tr:"Ayvaz Neo, TEKNOFEST Karadeniz’de (Samsun) sergilendi.", en:"Ayvaz Neo on display at TEKNOFEST Karadeniz in Samsun."}},
+  {cat:"tf", date:"2021-11-24", src:"Bolu Takip", url:"https://www.bolutakip.com/haber/ayvazin-hedefi-anlatildi",
+   t:"Ayvaz’ın hedefi anlatıldı",
+   n:{tr:"Ayvaz Elektromobil’in yeni sezon hedefleri; akademik danışman olarak sponsorluk sunumunu yaptım.", en:"Ayvaz Elektromobil’s goals for the new season; as academic advisor I gave the sponsorship presentation."}},
+  {cat:"tf", date:"2021", src:"Bolu Olay", url:"https://www.boluolay.com/bolu/vali-umite-ayvazi-tanittilar-h75285.html",
+   t:"Vali Ümit’e ‘Ayvaz’ı tanıttılar",
+   n:{tr:"Ayvaz takımı, 110 takım arasından seçilen 24 finalistten biri olarak Bolu Valisi’ne aracı tanıttı.", en:"The Ayvaz team, one of 24 finalists chosen from 110 teams, presented the car to the Governor of Bolu."}},
+  {cat:"tf", date:"", src:"Bolu Gündem", url:"https://www.bolugundem.com/haber/11920527/ayvaz-elektrikli-arac-yenileniyor",
+   t:"Ayvaz elektrikli araç yenileniyor",
+   n:{tr:"Ayvaz Elektromobil’in yeni sürüm çalışmaları.", en:"Work on the new version of Ayvaz Elektromobil."}}
 ];
 
 /* Atıf verileri: Google Akademik profilinden. Yeni yıl geldikçe güncelleyin. */
@@ -946,7 +1050,7 @@ function renderStatic(){
   $("#awards").innerHTML = AWARDS.map(a=>row(a.when, a[lang][0], a[lang][1])).join("");
 
   $("#yr").textContent = new Date().getFullYear();
-  renderPubFilters(); renderPubs(); renderCharts(); renderDemos(); renderProjFilters(); renderProjects(); renderCourses(); renderRTL(); renderTF();
+  renderPubFilters(); renderPubs(); renderCharts(); renderDemos(); renderProjFilters(); renderProjects(); renderCourses(); renderRTL(); renderTF(); renderMedia();
 }
 
 /* ---------- publications ---------- */
@@ -1137,32 +1241,31 @@ function renderProjects(){
 
 /* ---------- TEKNOFEST ---------- */
 function renderTF(){
-  $("#tfteams").innerHTML = TEKNOFEST.map((t,i)=>`<article class="tfteam">
-    <div class="tfhero">
-      <div class="pic">${t.photo?`<img src="${esc(t.photo)}" alt="${esc(t.name)}">`:`<canvas class="wave" aria-hidden="true"></canvas>`}</div>
+  $("#tfteams").innerHTML = `<div class="tfteam">${TEKNOFEST.map(t=>`<article class="tfhero">
+      <div class="pic">${t.photo?`<img src="${esc(t.photo)}" alt="${esc(t.name)}">`:`<canvas class="wave" data-kind="${t.kind}" data-label="${esc(t.name.replace("BAİBÜ ",""))}" aria-hidden="true"></canvas>`}</div>
       <div class="info">
         <span class="badge">★ ${esc(t.badge[lang])}</span>
         <h3>${esc(t.name)}</h3>
         <dl class="kv"><dt>${L("tf_comp")}</dt><dd>${esc(t.comp[lang])}</dd>
-          <dt>${L("tf_captain")}</dt><dd>${esc(t.captain)}</dd>
-          <dt>${L("tf_advisor")}</dt><dd>${esc(t.advisor)}</dd>
-          <dt>${L("tf_univ")}</dt><dd>${esc(t.univ[lang])}</dd>
+          <dt>${L("tf_period")}</dt><dd>${esc(t.period)}</dd>
+          <dt>${L("tf_captains")}</dt><dd>${esc(t.captains)}</dd>
           ${t.project?`<dt>${L("tf_project")}</dt><dd>${esc(t.project[lang])}</dd>`:""}</dl>
-        ${t.photo?"":`<p class="muted">${L("tf_photo_soon")}</p>`}
+        <p class="tfdesc">${esc(t[lang])}</p>
+        ${(t.specs.length||t.next||t.news.length)?`<details class="tfmore"><summary>${L("tf_more")}</summary>
+          ${t.specs.length?`<h4>${L("tf_vehicle")}</h4><div class="specs">${t.specs.map(x=>`<div class="area"><b>${esc(x[lang][0])}</b><span>${esc(x[lang][1])}</span></div>`).join("")}</div>`:""}
+          ${t.next?`<h4>${L("tf_next")}</h4><p>${esc(t.next[lang])}</p>`:""}
+          ${t.news.length?`<h4>${L("tf_news")}</h4><div class="news">${t.news.map(n=>`<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.t)} ↗<span>${esc(n.src)}</span></a>`).join("")}</div>`:""}
+        </details>`:""}
       </div>
-    </div>
-    <p class="prose">${esc(t[lang])}</p>
-    <section class="block"><h3>${L("tf_vehicle")}</h3>
-      <div class="specs">${t.specs.map(x=>`<div class="area"><b>${esc(x[lang][0])}</b><span>${esc(x[lang][1])}</span></div>`).join("")}</div></section>
-    <section class="block"><h3>${L("tf_next")}</h3><p class="prose">${esc(t.next[lang])}</p></section>
-    <section class="block"><h3>${L("tf_news")}</h3><div class="news">${t.news.map(n=>`<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.t)} ↗<span>${esc(n.src)}</span></a>`).join("")}</div></section>
-  </article>`).join("");
+    </article>`).join("")}</div>`;
   document.querySelectorAll("canvas.wave").forEach(drawWave);
 }
 /* Placeholder art until a team photo arrives: water surface, buoys and an autonomous path. */
 function drawWave(cv){
   const r = window.devicePixelRatio||1, w = cv.clientWidth||400, h = cv.clientHeight||240;
   cv.width = w*r; cv.height = h*r; const g = cv.getContext("2d"); g.scale(r,r);
+  if (cv.dataset.kind === "rocket") return drawRocket(g, w, h, cv.dataset.label);
+  if (cv.dataset.kind === "car") return drawCar(g, w, h, cv.dataset.label);
   const sky = g.createLinearGradient(0,0,0,h); sky.addColorStop(0,"#0d2238"); sky.addColorStop(1,"#123a5c"); g.fillStyle = sky; g.fillRect(0,0,w,h);
   g.strokeStyle = "rgba(160,200,235,.18)"; g.lineWidth = 1;
   for (let y=h*0.35; y<h; y+=14){ g.beginPath(); for (let x=0; x<=w; x+=6) g.lineTo(x, y + Math.sin(x/28 + y/9)*2.2); g.stroke(); }
@@ -1172,6 +1275,31 @@ function drawWave(cv){
   buoys.forEach(([x,y,c])=>{ g.fillStyle=c; g.beginPath(); g.arc(w*x,h*y,6,0,6.3); g.fill(); g.strokeStyle="rgba(255,255,255,.5)"; g.beginPath(); g.arc(w*x,h*y,11,0,6.3); g.stroke(); });
   g.fillStyle = "#dfe7f3"; g.save(); g.translate(w*0.08,h*0.85); g.rotate(-0.2); g.fillRect(-14,-5,28,10); g.beginPath(); g.moveTo(14,-5); g.lineTo(22,0); g.lineTo(14,5); g.fill(); g.restore();
   g.fillStyle = "rgba(223,231,243,.75)"; g.font = "11px IBM Plex Mono, monospace"; g.fillText("GIRDAP · İDA", 14, 22);
+}
+/* Rocket placeholder: night sky, dashed apogee arc, rocket on its way up. */
+function drawRocket(g, w, h, label){
+  const sky = g.createLinearGradient(0,0,0,h); sky.addColorStop(0,"#0a1428"); sky.addColorStop(1,"#1b2e4a"); g.fillStyle = sky; g.fillRect(0,0,w,h);
+  g.fillStyle = "rgba(223,231,243,.55)"; for (let k=0;k<40;k++){ const x=(Math.sin(k*91.7)*0.5+0.5)*w, y=(Math.sin(k*37.3)*0.5+0.5)*h*0.7; g.fillRect(x,y,1.4,1.4); }
+  g.fillStyle = "#2a3d57"; g.fillRect(0,h*0.88,w,h*0.12);
+  g.setLineDash([5,5]); g.strokeStyle = "#ffb347"; g.lineWidth = 1.6; g.beginPath(); g.moveTo(w*0.2,h*0.88); g.quadraticCurveTo(w*0.5,-h*0.25,w*0.85,h*0.88); g.stroke(); g.setLineDash([]);
+  g.save(); g.translate(w*0.36,h*0.36); g.rotate(0.45);
+  g.fillStyle = "#dfe7f3"; g.fillRect(-6,-26,12,40); g.beginPath(); g.moveTo(-6,-26); g.lineTo(0,-40); g.lineTo(6,-26); g.fill();
+  g.fillStyle = "#e8554e"; g.beginPath(); g.moveTo(-6,8); g.lineTo(-13,18); g.lineTo(-6,14); g.fill(); g.beginPath(); g.moveTo(6,8); g.lineTo(13,18); g.lineTo(6,14); g.fill();
+  g.fillStyle = "#ffb347"; g.beginPath(); g.moveTo(-4,14); g.lineTo(0,28); g.lineTo(4,14); g.fill(); g.restore();
+  g.fillStyle = "rgba(223,231,243,.75)"; g.font = "11px IBM Plex Mono, monospace"; g.fillText((label||"").toUpperCase(), 14, 22);
+  g.fillText("apogee", w*0.5-18, h*0.08+12);
+}
+/* Electric-vehicle placeholder: track lines and a low efficiency car. */
+function drawCar(g, w, h, label){
+  const bg = g.createLinearGradient(0,0,0,h); bg.addColorStop(0,"#13202f"); bg.addColorStop(1,"#22344a"); g.fillStyle = bg; g.fillRect(0,0,w,h);
+  g.fillStyle = "#2c3b4e"; g.fillRect(0,h*0.68,w,h*0.32);
+  g.strokeStyle = "rgba(223,231,243,.5)"; g.lineWidth = 2; g.setLineDash([18,14]); g.beginPath(); g.moveTo(0,h*0.84); g.lineTo(w,h*0.84); g.stroke(); g.setLineDash([]);
+  const cx = w*0.5, cy = h*0.66;
+  g.fillStyle = "#dfe7f3"; g.beginPath(); g.moveTo(cx-90,cy); g.quadraticCurveTo(cx-60,cy-38,cx+10,cy-40); g.quadraticCurveTo(cx+80,cy-38,cx+95,cy-6); g.lineTo(cx+95,cy); g.closePath(); g.fill();
+  g.fillStyle = "#5fc4c0"; g.beginPath(); g.moveTo(cx-20,cy-36); g.quadraticCurveTo(cx+10,cy-52,cx+35,cy-36); g.closePath(); g.fill();
+  g.fillStyle = "#0b1220"; [cx-55,cx+60].forEach(x=>{ g.beginPath(); g.arc(x,cy+2,12,0,6.3); g.fill(); });
+  g.strokeStyle = "#ffb347"; g.lineWidth = 2; [0,1,2].forEach(k=>{ g.beginPath(); g.moveTo(cx-110-k*14,cy-28+k*10); g.lineTo(cx-140-k*14,cy-28+k*10); g.stroke(); });
+  g.fillStyle = "rgba(223,231,243,.75)"; g.font = "11px IBM Plex Mono, monospace"; g.fillText((label||"").toUpperCase(), 14, 22);
 }
 
 /* ---------- RTL ---------- */
@@ -1229,6 +1357,35 @@ document.addEventListener("submit", async e => {
   btn.disabled = false;
 });
 
+
+/* ---------- media ---------- */
+let mediaCat = "all";
+const TR_MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const EN_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtDate(d){
+  if (!d) return L("m_undated");
+  const [y,m,day] = d.split("-");
+  if (!m) return y;
+  const M = (lang==="en"?EN_MONTHS:TR_MONTHS)[+m-1];
+  return lang==="en" ? `${+day} ${M} ${y}` : `${+day} ${M} ${y}`;
+}
+function renderMedia(){
+  $("#socials").innerHTML = SOCIALS.map(x=>`<a class="social" href="${esc(x.url)}" target="_blank" rel="noopener"><b>${esc(x.name)}</b><span>${esc(x.who[lang])}</span><i>↗</i></a>`).join("");
+  $("#mediafilters").innerHTML = [["all","m_all"],["proj","m_proj"],["tf","m_tf"]].map(([k,lab])=>{
+    const n = k==="all" ? MEDIA.length : MEDIA.filter(m=>m.cat===k).length;
+    return `<button type="button" class="chip" data-mcat="${k}" aria-pressed="${mediaCat===k}">${L(lab)}<span class="n">${n}</span></button>`;
+  }).join("");
+  const list = MEDIA.filter(m=>mediaCat==="all"||m.cat===mediaCat).slice().sort((a,b)=>(b.date||"0").localeCompare(a.date||"0"));
+  $("#press").innerHTML = list.map(m=>`<article class="pitem">
+      <div class="pdate">${fmtDate(m.date)}</div>
+      <div class="pbody">
+        <div class="psrc"><span class="tag ${m.cat==="tf"?"cu":""}">${m.cat==="tf"?L("m_tf"):L("m_proj")}</span>${esc(m.src)}</div>
+        <a class="ptitle" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.t)} ↗</a>
+        <p>${esc(m.n[lang])}</p>
+        ${m.also&&m.also.length?`<div class="palso">${L("m_also")} ${m.also.map(a=>`<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.src)}</a>`).join(" · ")}</div>`:""}
+      </div></article>`).join("");
+}
+
 /* ---------- courses ---------- */
 function renderCourses(){
   const term = t => t==="fall"?L("fall"):t==="spring"?L("spring"):L("elective");
@@ -1237,7 +1394,7 @@ function renderCourses(){
 }
 
 /* ---------- views ---------- */
-const VIEWS = ["hakkimda","yayinlar","projeler","rtl","teknofest","dersler"];
+const VIEWS = ["hakkimda","yayinlar","projeler","rtl","teknofest","medya","dersler"];
 function show(v, scroll){
   if (!VIEWS.includes(v)) v = "hakkimda";
   VIEWS.forEach(k => { $("#v-"+k).hidden = k!==v; });
@@ -1270,6 +1427,7 @@ document.addEventListener("click", e => {
   if (t.dataset.view){ e.preventDefault(); show(t.dataset.view, true); try{ history.replaceState(null,"","#"+t.dataset.view); }catch(err){} return; }
   if (t.hasAttribute("data-clearq")){ pubQ = null; renderPubs(); renderCharts(); return; }
   if (t.dataset.type){ pubType = t.dataset.type; renderPubFilters(); renderPubs(); return; }
+  if (t.dataset.mcat){ mediaCat = t.dataset.mcat; renderMedia(); return; }
   if (t.dataset.role){ projRole = t.dataset.role; renderProjFilters(); renderProjects(); return; }
   if (t.dataset.demo !== undefined){ openDemo(+t.dataset.demo); return; }
   if (t.hasAttribute("data-scroll-demos")){ e.preventDefault(); $("#demos").scrollIntoView({behavior:"smooth", block:"start"}); return; }
